@@ -18,7 +18,7 @@ class PdoTotpStorage implements TotpStorageInterface
     ) {
     }
 
-    public function store(string $userId, array $secret): void
+    public function store(string $userId, string $secret, array $metadata = []): bool
     {
         $stmt = $this->pdo->prepare("
             INSERT INTO {$this->tableName} (user_id, secret, backup_codes, enabled, created_at, updated_at)
@@ -29,11 +29,11 @@ class PdoTotpStorage implements TotpStorageInterface
                 updated_at = :updated_at
         ");
 
-        $stmt->execute([
+        return $stmt->execute([
             'user_id' => $userId,
-            'secret' => $secret['secret'] ?? '',
-            'backup_codes' => json_encode($secret['backup_codes'] ?? []),
-            'enabled' => $secret['enabled'] ? 1 : 0,
+            'secret' => $secret,
+            'backup_codes' => json_encode($metadata['backup_codes'] ?? []),
+            'enabled' => isset($metadata['enabled']) && $metadata['enabled'] ? 1 : 0,
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ]);

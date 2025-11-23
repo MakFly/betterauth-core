@@ -81,17 +81,14 @@ class PdoAccountLinkRepository implements AccountLinkRepositoryInterface
         return $links;
     }
 
-    public function findByProvider(string $provider): array
+    public function findByProvider(string $provider, string $providerId): ?AccountLink
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE provider = :provider ORDER BY created_at DESC");
-        $stmt->execute(['provider' => $provider]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE provider = :provider AND provider_user_id = :provider_id");
+        $stmt->execute(['provider' => $provider, 'provider_id' => $providerId]);
 
-        $links = [];
-        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $links[] = AccountLink::fromArray($data);
-        }
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $links;
+        return $data ? AccountLink::fromArray($data) : null;
     }
 
     public function findByUserAndProvider(string $userId, string $provider): ?AccountLink
@@ -114,9 +111,9 @@ class PdoAccountLinkRepository implements AccountLinkRepositoryInterface
         return $data ? AccountLink::fromArray($data) : null;
     }
 
-    public function setPrimary(string $id): bool
+    public function setPrimary(string $userId, string $provider): bool
     {
-        $link = $this->findById($id);
+        $link = $this->findByUserAndProvider($userId, $provider);
 
         if (!$link) {
             return false;
@@ -126,12 +123,11 @@ class PdoAccountLinkRepository implements AccountLinkRepositoryInterface
         $stmt = $this->pdo->prepare("
             UPDATE {$this->tableName}
             SET is_primary = 0, updated_at = :updated_at
-            WHERE user_id = :user_id AND id != :id
+            WHERE user_id = :user_id
         ");
 
         $stmt->execute([
-            'user_id' => $link->getUserId(),
-            'id' => $id,
+            'user_id' => $userId,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -139,16 +135,17 @@ class PdoAccountLinkRepository implements AccountLinkRepositoryInterface
         $stmt = $this->pdo->prepare("
             UPDATE {$this->tableName}
             SET is_primary = 1, updated_at = :updated_at
-            WHERE id = :id
+            WHERE user_id = :user_id AND provider = :provider
         ");
 
         return $stmt->execute([
-            'id' => $id,
+            'user_id' => $userId,
+            'provider' => $provider,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
     }
 
-    public function update(string $id, array $data): AccountLink
+    public function update(string $id, array $data): bool
     {
         $data['updated_at'] = date('Y-m-d H:i:s');
 
@@ -170,14 +167,7 @@ class PdoAccountLinkRepository implements AccountLinkRepositoryInterface
             WHERE id = :id
         ");
 
-        $stmt->execute($data);
-
-        $link = $this->findById($id);
-        if ($link === null) {
-            throw new \RuntimeException('Failed to update account link');
-        }
-
-        return $link;
+        return $stmt->execute($data);
     }
 
     public function delete(string $id): bool

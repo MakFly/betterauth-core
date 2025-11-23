@@ -19,7 +19,7 @@ class PdoEmailVerificationStorage implements EmailVerificationStorageInterface
     ) {
     }
 
-    public function store(string $token, string $email, int $expiresIn): void
+    public function store(string $token, string $email, int $expiresIn): EmailVerificationToken
     {
         $expiresAt = date('Y-m-d H:i:s', time() + $expiresIn);
 
@@ -35,6 +35,13 @@ class PdoEmailVerificationStorage implements EmailVerificationStorageInterface
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
+
+        $stored = $this->findByToken($token);
+        if ($stored === null) {
+            throw new \RuntimeException('Failed to store email verification token');
+        }
+
+        return $stored;
     }
 
     public function findByToken(string $token): ?EmailVerificationToken

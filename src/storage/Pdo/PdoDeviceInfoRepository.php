@@ -68,10 +68,10 @@ class PdoDeviceInfoRepository implements DeviceInfoRepositoryInterface
         return $data ? DeviceInfo::fromArray($data) : null;
     }
 
-    public function findByFingerprint(string $fingerprint): ?DeviceInfo
+    public function findByFingerprint(string $userId, string $fingerprint): ?DeviceInfo
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE fingerprint = :fingerprint");
-        $stmt->execute(['fingerprint' => $fingerprint]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id AND fingerprint = :fingerprint");
+        $stmt->execute(['user_id' => $userId, 'fingerprint' => $fingerprint]);
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 

@@ -68,10 +68,12 @@ class PdoSecurityEventRepository implements SecurityEventRepositoryInterface
         return $data ? SecurityEvent::fromArray($data) : null;
     }
 
-    public function findByUserId(string $userId): array
+    public function findByUserId(string $userId, int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC");
-        $stmt->execute(['user_id' => $userId]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('user_id', $userId, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $events = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -81,10 +83,12 @@ class PdoSecurityEventRepository implements SecurityEventRepositoryInterface
         return $events;
     }
 
-    public function findBySeverity(string $severity): array
+    public function findBySeverity(string $severity, int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE severity = :severity ORDER BY created_at DESC");
-        $stmt->execute(['severity' => $severity]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE severity = :severity ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('severity', $severity, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $events = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {

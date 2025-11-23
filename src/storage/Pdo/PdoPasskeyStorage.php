@@ -18,15 +18,15 @@ class PdoPasskeyStorage implements PasskeyStorageInterface
     ) {
     }
 
-    public function store(array $passkey): void
+    public function store(string $userId, string $credentialId, string $publicKey, array $metadata): bool
     {
         $data = [
-            'credential_id' => $passkey['credential_id'],
-            'user_id' => $passkey['user_id'],
-            'public_key' => $passkey['public_key'],
-            'sign_count' => $passkey['sign_count'] ?? 0,
-            'transports' => isset($passkey['transports']) ? json_encode($passkey['transports']) : null,
-            'metadata' => isset($passkey['metadata']) ? json_encode($passkey['metadata']) : null,
+            'credential_id' => $credentialId,
+            'user_id' => $userId,
+            'public_key' => $publicKey,
+            'sign_count' => $metadata['sign_count'] ?? 0,
+            'transports' => isset($metadata['transports']) ? json_encode($metadata['transports']) : null,
+            'metadata' => json_encode($metadata),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
@@ -39,7 +39,7 @@ class PdoPasskeyStorage implements PasskeyStorageInterface
             VALUES ($placeholders)
         ");
 
-        $stmt->execute($data);
+        return $stmt->execute($data);
     }
 
     public function findByCredentialId(string $credentialId): ?array

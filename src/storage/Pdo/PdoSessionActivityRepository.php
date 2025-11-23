@@ -68,10 +68,12 @@ class PdoSessionActivityRepository implements SessionActivityRepositoryInterface
         return $data ? SessionActivity::fromArray($data) : null;
     }
 
-    public function findBySessionId(string $sessionId): array
+    public function findBySessionId(string $sessionId, int $limit = 50): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE session_id = :session_id ORDER BY created_at DESC");
-        $stmt->execute(['session_id' => $sessionId]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE session_id = :session_id ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('session_id', $sessionId, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $activities = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -81,10 +83,12 @@ class PdoSessionActivityRepository implements SessionActivityRepositoryInterface
         return $activities;
     }
 
-    public function findByUserId(string $userId): array
+    public function findByUserId(string $userId, int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC");
-        $stmt->execute(['user_id' => $userId]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('user_id', $userId, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $activities = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {

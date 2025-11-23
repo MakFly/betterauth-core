@@ -68,10 +68,12 @@ class PdoSuspiciousActivityRepository implements SuspiciousActivityRepositoryInt
         return $data ? SuspiciousActivity::fromArray($data) : null;
     }
 
-    public function findByUserId(string $userId): array
+    public function findByUserId(string $userId, int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC");
-        $stmt->execute(['user_id' => $userId]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE user_id = :user_id ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('user_id', $userId, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $activities = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -81,10 +83,12 @@ class PdoSuspiciousActivityRepository implements SuspiciousActivityRepositoryInt
         return $activities;
     }
 
-    public function findByStatus(string $status): array
+    public function findByStatus(string $status, int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE status = :status ORDER BY created_at DESC");
-        $stmt->execute(['status' => $status]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->tableName} WHERE status = :status ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue('status', $status, PDO::PARAM_STR);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
 
         $activities = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
