@@ -1,37 +1,48 @@
 # BetterAuth Core
 
-[![Tests](https://github.com/betterauth/betterauth-core/workflows/Tests/badge.svg)](https://github.com/betterauth/betterauth-core/actions)
-[![Latest Stable Version](https://poser.pugx.org/betterauth/core/v/stable)](https://packagist.org/packages/betterauth/core)
-[![Total Downloads](https://poser.pugx.org/betterauth/core/downloads)](https://packagist.org/packages/betterauth/core)
-[![License](https://poser.pugx.org/betterauth/core/license)](https://packagist.org/packages/betterauth/core)
+[![CI Status](https://github.com/MakFly/betterauth-core/actions/workflows/tests.yml/badge.svg)](https://github.com/MakFly/betterauth-core/actions)
+[![Latest Stable Version](https://img.shields.io/packagist/v/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
+[![Total Downloads](https://img.shields.io/packagist/dt/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
+[![License](https://img.shields.io/packagist/l/betterauth/core.svg)](https://github.com/MakFly/betterauth-core/blob/main/LICENSE)
+[![PHP Version](https://img.shields.io/packagist/php-v/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
 
 Framework-agnostic authentication library for PHP 8.2+.
 
-## Features
+## ✨ Features
 
-- Multiple authentication methods (Email/Password, Magic Link, OAuth, Passkeys, TOTP)
-- SSO/OIDC Provider support
-- Multi-tenant capabilities (Organizations, Teams, Members, Invitations)
-- Secure by default (Paseto V4 tokens, Argon2id hashing)
-- Multiple storage adapters (PDO, Eloquent, Doctrine)
-- Framework-agnostic core
-- UUID v7 support for time-ordered, non-guessable IDs
+- 🔐 **Multiple authentication methods**: Email/Password, Magic Link, OAuth, Passkeys (WebAuthn), TOTP
+- 🌍 **OAuth Providers**: Google, GitHub, Facebook, Microsoft, Discord
+- 👥 **Multi-tenant capabilities**: Organizations, Teams, Members, Invitations with RBAC
+- 🔒 **Secure by default**: Paseto V4 tokens, Argon2id hashing
+- 💾 **Multiple storage adapters**: PDO, Eloquent, Doctrine
+- 🎯 **Framework-agnostic core**: Use with any PHP framework
+- 🆔 **UUID v7 support**: Time-ordered, non-guessable IDs
+- 🔌 **Plugin system**: Extensible architecture
+- 📊 **Security audit trail**: Events logging & monitoring
 
-## Installation
+## 📦 Installation
 
 ```bash
 composer require betterauth/core
 ```
 
-## Framework Integrations
+## 🚀 Framework Integrations
 
-For framework-specific integrations, use:
+BetterAuth Core is framework-agnostic with official integrations:
 
-- **Laravel**: [`betterauth/laravel`](https://github.com/betterauth/betterauth-laravel)
-- **Symfony**: [`betterauth/symfony-bundle`](https://github.com/betterauth/betterauth-symfony)
+- **Symfony** (✅ Production Ready): [`betterauth/symfony-bundle`](https://github.com/MakFly/betterauth-symfony)
+- **Laravel** (🚧 In Development): `betterauth/laravel`
 - **Vanilla PHP**: Use this package directly with PDO storage adapters
 
-## Quick Start (Vanilla PHP with PDO)
+## 🔧 Requirements
+
+- PHP 8.2 or higher
+- ext-json
+- ext-openssl
+- ramsey/uuid ^4.7
+- paragonie/paseto ^3.1
+
+## 🚀 Quick Start (Vanilla PHP with PDO)
 
 ```php
 <?php
@@ -73,7 +84,7 @@ $tokens = $auth->login(
 $currentUser = $auth->getUserFromToken($tokens['accessToken']);
 ```
 
-## Storage Adapters
+## 💾 Storage Adapters
 
 ### PDO (Vanilla PHP)
 
@@ -96,9 +107,9 @@ $userRepo = new EloquentUserRepository();
 
 ### Doctrine (Symfony)
 
-Use the [`betterauth/symfony-bundle`](https://github.com/betterauth/betterauth-symfony) which provides Doctrine integration.
+Use the [`betterauth/symfony-bundle`](https://github.com/MakFly/betterauth-symfony) which provides Doctrine integration.
 
-## Authentication Providers
+## 🔑 Authentication Providers
 
 ### Email/Password
 
@@ -191,7 +202,7 @@ $options = $passkey->generateAuthenticationOptions();
 $user = $passkey->verifyAuthentication($clientResponse);
 ```
 
-## Security Features
+## 🔒 Security Features
 
 ### Token Management
 
@@ -234,7 +245,7 @@ $user->id; // "019ab13e-40f1-7b21-a672-f403d5277ec7"
 // - No index fragmentation (fast DB queries)
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 ```php
 use BetterAuth\Core\Config\AuthConfig;
@@ -250,7 +261,7 @@ $config = new AuthConfig(
 );
 ```
 
-## Multi-Tenancy
+## 👥 Multi-Tenancy
 
 ```php
 use BetterAuth\Providers\AccountLinkProvider\OrganizationManager;
@@ -274,47 +285,65 @@ $orgManager->inviteMember(
 $orgManager->acceptInvitation($token);
 ```
 
-## Testing
+## 🧪 Testing
 
 ```bash
-# Run tests
+# Run PHPUnit tests
 composer test
 
-# Run PHPStan
+# Run PHPStan static analysis
 composer phpstan
+
+# Run Behat BDD scenarios
+vendor/bin/behat
 
 # Run code style fixer
 composer cs-fix
 ```
 
-## Documentation
+## 📊 CI/CD
 
-- [Installation Guide](https://github.com/betterauth/betterauth-core/wiki/Installation)
-- [API Reference](https://github.com/betterauth/betterauth-core/wiki/API-Reference)
-- [Security Best Practices](https://github.com/betterauth/betterauth-core/wiki/Security)
-- [UUID v7 vs INT](https://github.com/betterauth/betterauth-core/wiki/UUID-vs-INT)
+BetterAuth Core includes comprehensive CI/CD with GitHub Actions:
 
-## Requirements
+- ✅ PHPUnit tests (PHP 8.2, 8.3, 8.4)
+- ✅ PHPStan static analysis (level 5)
+- ✅ Security checks (Composer audit + Symfony security checker)
+- ✅ Behat BDD scenarios
+- ✅ Code quality checks (PHP CS Fixer)
 
-- PHP 8.2 or higher
-- ext-json
-- ext-openssl
-- ramsey/uuid ^4.7
-- paragonie/paseto ^3.1
+All tests run on every push and pull request. View the [latest CI results](https://github.com/MakFly/betterauth-core/actions).
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Security
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-If you discover any security-related issues, please email security@betterauth.com instead of using the issue tracker.
+## 🔒 Security
 
-## License
+If you discover any security-related issues, please create an issue on [GitHub](https://github.com/MakFly/betterauth-core/issues) with the `security` label.
 
-The MIT License (MIT). Please see [License File](LICENSE) for more information.
+## 📄 License
 
-## Credits
+The MIT License (MIT). Please see [LICENSE](LICENSE) file for details.
 
-- [BetterAuth Team](https://github.com/betterauth)
-- [All Contributors](https://github.com/betterauth/betterauth-core/contributors)
+## 🔗 Links
+
+- **Packagist**: https://packagist.org/packages/betterauth/core
+- **GitHub**: https://github.com/MakFly/betterauth-core
+- **Issues**: https://github.com/MakFly/betterauth-core/issues
+- **Symfony Bundle**: https://github.com/MakFly/betterauth-symfony
+- **Laravel Package**: https://github.com/MakFly/betterauth-laravel
+
+## 🙏 Credits
+
+- [BetterAuth Contributors](https://github.com/MakFly/betterauth-core/contributors)
+- All the amazing people who contribute to open source
+
+---
+
+Made with ❤️ by the BetterAuth contributors
