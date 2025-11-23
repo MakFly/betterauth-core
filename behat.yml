@@ -1,0 +1,28 @@
+default:
+  suites:
+    api_authentication:
+      paths:
+        - '%paths.base%/features/api'
+      contexts:
+        - BetterAuth\Tests\Behat\ApiAuthContext
+
+    session_authentication:
+      paths:
+        - '%paths.base%/features/session'
+      contexts:
+        - BetterAuth\Tests\Behat\SessionAuthContext
+
+    organization:
+      paths:
+        - '%paths.base%/features/organization'
+      contexts:
+        - BetterAuth\Tests\Behat\OrganizationContext
+
+  extensions:
+    # Add extensions here if needed
+
+  formatters:
+    pretty:
+      verbose: true
+      paths: false
+      snippets: false
