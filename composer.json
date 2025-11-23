@@ -44,12 +44,18 @@
         "phpstan/phpstan": "^1.10",
         "friendsofphp/php-cs-fixer": "^3.48"
     },
+    "suggest": {
+        "illuminate/database": "Required for Eloquent storage implementations (Laravel integration)"
+    },
     "autoload": {
         "psr-4": {
             "BetterAuth\\Core\\": "src/core/",
             "BetterAuth\\Providers\\": "src/providers/",
-            "BetterAuth\\Storage\\": "src/storage/"
-        }
+            "BetterAuth\\Storage\\Pdo\\": "src/storage/Pdo/"
+        },
+        "exclude-from-classmap": [
+            "src/storage/Eloquent/"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
