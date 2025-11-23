@@ -1,10 +1,10 @@
 # BetterAuth Core
 
-[![CI Status](https://github.com/MakFly/betterauth-core/actions/workflows/tests.yml/badge.svg)](https://github.com/MakFly/betterauth-core/actions)
-[![Latest Stable Version](https://img.shields.io/packagist/v/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
-[![Total Downloads](https://img.shields.io/packagist/dt/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
-[![License](https://img.shields.io/packagist/l/betterauth/core.svg)](https://github.com/MakFly/betterauth-core/blob/main/LICENSE)
-[![PHP Version](https://img.shields.io/packagist/php-v/betterauth/core.svg)](https://packagist.org/packages/betterauth/core)
+[![CI](https://github.com/MakFly/betterauth-core/actions/workflows/tests.yml/badge.svg?label=CI)](https://github.com/MakFly/betterauth-core/actions)
+[![Latest Stable Version](https://img.shields.io/packagist/v/betterauth/core?label=stable)](https://packagist.org/packages/betterauth/core)
+[![Total Downloads](https://img.shields.io/packagist/dt/betterauth/core?label=downloads)](https://packagist.org/packages/betterauth/core)
+[![License](https://img.shields.io/packagist/l/betterauth/core?label=license)](https://github.com/MakFly/betterauth-core/blob/main/LICENSE)
+[![PHP Version](https://img.shields.io/packagist/php-v/betterauth/core?label=php)](https://packagist.org/packages/betterauth/core)
 
 Framework-agnostic authentication library for PHP 8.2+.
 
@@ -341,9 +341,9 @@ The MIT License (MIT). Please see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Credits
 
-- [BetterAuth Contributors](https://github.com/MakFly/betterauth-core/contributors)
+- [BackToTheFutur Team](https://github.com/MakFly/betterauth-core/contributors)
 - All the amazing people who contribute to open source
 
 ---
 
-Made with ❤️ by the BetterAuth contributors
+Made with ❤️ by the BackToTheFutur Team
