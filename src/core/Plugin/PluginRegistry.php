@@ -67,8 +67,8 @@ class PluginRegistry
                 } else {
                     $instances[] = new $pluginClass();
                 }
-            } catch (\Exception $e) {
-                // Log error and skip this plugin
+            } catch (\Throwable $e) {
+                // Log error and skip this plugin (catches both Exceptions and Errors)
                 error_log("Failed to instantiate plugin '$pluginClass': " . $e->getMessage());
             }
         }

@@ -41,7 +41,7 @@ class PluginManager
     private $eventDispatcher = null;
 
     public function __construct(
-        private readonly AuthConfig $config
+        AuthConfig $config
     ) {
         $this->context = new PluginContext($config);
     }
