@@ -13,3 +13,7 @@ parameters:
         - '#Function now not found#'
         # Readonly property assignment in constructor (false positive)
         - '#Readonly property .* is already assigned#'
+        # Dead catch in PluginRegistry - false positive (dynamic instantiation can fail)
+        -
+            message: '#Dead catch - Throwable is never thrown in the try block#'
+            path: src/core/Plugin/PluginRegistry.php
