@@ -1,6 +1,5 @@
 {
     "name": "betterauth/core",
-    "version": "1.0.0",
     "description": "Framework-agnostic authentication library for PHP - Core package",
     "type": "library",
     "license": "MIT",
