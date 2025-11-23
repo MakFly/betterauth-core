@@ -1,0 +1,73 @@
+{
+    "name": "betterauth/core",
+    "version": "1.0.0",
+    "description": "Framework-agnostic authentication library for PHP - Core package",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "auth",
+        "authentication",
+        "oauth",
+        "sso",
+        "oidc",
+        "passkeys",
+        "webauthn",
+        "2fa",
+        "totp",
+        "multi-tenant",
+        "organizations",
+        "uuid-v7"
+    ],
+    "authors": [
+        {
+            "name": "BetterAuth Contributors"
+        }
+    ],
+    "homepage": "https://github.com/betterauth/betterauth-core",
+    "support": {
+        "issues": "https://github.com/betterauth/betterauth-core/issues",
+        "source": "https://github.com/betterauth/betterauth-core"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ramsey/uuid": "^4.7",
+        "paragonie/paseto": "^3.1",
+        "bacon/bacon-qr-code": "^2.0",
+        "web-auth/webauthn-lib": "^4.9",
+        "web-auth/cose-lib": "^4.2",
+        "mobiledetect/mobiledetectlib": "^4.8",
+        "geoip2/geoip2": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.48"
+    },
+    "autoload": {
+        "psr-4": {
+            "BetterAuth\\Core\\": "src/core/",
+            "BetterAuth\\Providers\\": "src/providers/",
+            "BetterAuth\\Storage\\": "src/storage/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BetterAuth\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "phpstan": "phpstan analyse",
+        "cs-fix": "php-cs-fixer fix"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}

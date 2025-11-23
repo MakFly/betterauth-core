@@ -1,0 +1,15 @@
+parameters:
+    level: 5
+    paths:
+        - src
+    excludePaths:
+        - vendor
+        - tests
+        - src/storage/Eloquent
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Laravel helper functions not available in standalone environment
+        - '#Function config not found#'
+        - '#Function now not found#'
+        # Readonly property assignment in constructor (false positive)
+        - '#Readonly property .* is already assigned#'

@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace BetterAuth\Core\Config;
+
+/**
+ * Authentication configuration supporting both monolith and API modes.
+ */
+class AuthConfig
+{
+    public function __construct(
+        public readonly AuthMode $mode = AuthMode::MONOLITH,
+        public readonly string $secretKey = '',
+        public readonly int $sessionLifetime = 604800, // 7 days
+        public readonly int $tokenLifetime = 3600, // 1 hour for API tokens
+        public readonly int $refreshTokenLifetime = 2592000, // 30 days
+        public readonly bool $enableRefreshTokens = true,
+        public readonly string $cookieName = 'better_auth_session',
+        public readonly bool $cookieHttpOnly = true,
+        public readonly bool $cookieSecure = true,
+        public readonly string $cookieSameSite = 'lax',
+        public readonly string $tokenHeader = 'Authorization',
+        public readonly string $tokenPrefix = 'Bearer',
+        public readonly bool $enableRateLimiting = true,
+        public readonly int $rateLimitMaxAttempts = 5,
+        public readonly int $rateLimitDecaySeconds = 300,
+    ) {
+    }
+
+    /**
+     * Create config for monolith mode.
+     */
+    public static function forMonolith(string $secretKey, array $overrides = []): self
+    {
+        $defaults = [
+            'mode' => AuthMode::MONOLITH,
+            'secretKey' => $secretKey,
+            'enableRefreshTokens' => false, // Not needed in monolith
+        ];
+
+        $params = array_merge($defaults, $overrides);
+
+        return new self(...$params);
+    }
+
+    /**
+     * Create config for API mode.
+     */
+    public static function forApi(string $secretKey, array $overrides = []): self
+    {
+        $defaults = [
+            'mode' => AuthMode::API,
+            'secretKey' => $secretKey,
+            'sessionLifetime' => 3600, // Shorter for APIs
+            'enableRefreshTokens' => true, // Essential for APIs
+            'cookieHttpOnly' => false, // APIs don't use cookies
+        ];
+
+        $params = array_merge($defaults, $overrides);
+
+        return new self(...$params);
+    }
+
+    /**
+     * Check if mode is monolith.
+     */
+    public function isMonolith(): bool
+    {
+        return $this->mode->isMonolith();
+    }
+
+    /**
+     * Check if mode is API.
+     */
+    public function isApi(): bool
+    {
+        return $this->mode->isApi();
+    }
+}
