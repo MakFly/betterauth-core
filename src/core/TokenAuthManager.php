@@ -9,6 +9,7 @@ use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Exceptions\InvalidCredentialsException;
 use BetterAuth\Core\Exceptions\InvalidTokenException;
 use BetterAuth\Core\Interfaces\RefreshTokenRepositoryInterface;
+use BetterAuth\Core\Interfaces\TokenAuthManagerInterface;
 use BetterAuth\Core\Interfaces\TokenSignerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\Utils\Crypto;
@@ -26,7 +27,7 @@ use Psr\Log\NullLogger;
  *
  * This class is final to ensure consistent token authentication behavior.
  */
-final class TokenAuthManager
+final class TokenAuthManager implements TokenAuthManagerInterface
 {
     private readonly LoggerInterface $logger;
 
