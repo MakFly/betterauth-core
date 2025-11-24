@@ -57,11 +57,17 @@ final class EmailVerificationProvider
         $token = Crypto::randomToken(32);
         $this->verificationStorage->store($token, $email, self::TOKEN_EXPIRY);
 
+        // Always send email - construct verification link
         if ($callbackUrl !== null) {
             $separator = str_contains($callbackUrl, '?') ? '&' : '?';
             $verificationLink = $callbackUrl . $separator . 'token=' . urlencode($token);
-            $this->emailSender->sendVerificationEmail($email, $verificationLink);
+        } else {
+            // Fallback: construct a basic verification link with token
+            // The frontend should handle this token via the verify endpoint
+            $verificationLink = 'http://localhost/auth/email/verify?token=' . urlencode($token);
         }
+        
+        $this->emailSender->sendVerificationEmail($email, $verificationLink);
 
         return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
     }
