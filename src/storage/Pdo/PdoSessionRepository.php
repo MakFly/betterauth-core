@@ -131,8 +131,6 @@ class PdoSessionRepository implements SessionRepositoryInterface
 
     /**
      * Create the sessions table.
-     *
-     * @return bool
      */
     public function createTable(): bool
     {

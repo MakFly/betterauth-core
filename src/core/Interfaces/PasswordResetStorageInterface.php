@@ -17,6 +17,7 @@ interface PasswordResetStorageInterface
      * @param string $token The reset token
      * @param string $email The user email
      * @param int $expiresIn Expiration time in seconds
+     *
      * @return PasswordResetToken The stored token
      */
     public function store(string $token, string $email, int $expiresIn): PasswordResetToken;
@@ -25,6 +26,7 @@ interface PasswordResetStorageInterface
      * Find a password reset token by its value.
      *
      * @param string $token The token
+     *
      * @return PasswordResetToken|null The token or null if not found
      */
     public function findByToken(string $token): ?PasswordResetToken;
@@ -33,6 +35,7 @@ interface PasswordResetStorageInterface
      * Mark a token as used.
      *
      * @param string $token The token
+     *
      * @return bool True if marked as used, false otherwise
      */
     public function markAsUsed(string $token): bool;
@@ -41,6 +44,7 @@ interface PasswordResetStorageInterface
      * Delete a token.
      *
      * @param string $token The token
+     *
      * @return bool True if deleted, false otherwise
      */
     public function delete(string $token): bool;
@@ -49,6 +53,7 @@ interface PasswordResetStorageInterface
      * Delete all tokens for an email.
      *
      * @param string $email The email address
+     *
      * @return int Number of tokens deleted
      */
     public function deleteByEmail(string $email): int;

@@ -53,6 +53,7 @@ class User
     public function setId(string $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -64,6 +65,7 @@ class User
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -75,6 +77,7 @@ class User
     public function setPasswordHash(?string $passwordHash): self
     {
         $this->passwordHash = $passwordHash;
+
         return $this;
     }
 
@@ -86,6 +89,7 @@ class User
     public function setName(?string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -97,6 +101,7 @@ class User
     public function setAvatar(?string $avatar): self
     {
         $this->avatar = $avatar;
+
         return $this;
     }
 
@@ -108,6 +113,7 @@ class User
     public function setEmailVerified(bool $emailVerified): self
     {
         $this->emailVerified = $emailVerified;
+
         return $this;
     }
 
@@ -119,6 +125,7 @@ class User
     public function setEmailVerifiedAt(?DateTimeImmutable $emailVerifiedAt): self
     {
         $this->emailVerifiedAt = $emailVerifiedAt;
+
         return $this;
     }
 
@@ -130,6 +137,7 @@ class User
     public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -141,6 +149,7 @@ class User
     public function setUpdatedAt(DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -152,6 +161,7 @@ class User
     public function setMetadata(?array $metadata): self
     {
         $this->metadata = $metadata;
+
         return $this;
     }
 
@@ -168,14 +178,14 @@ class User
         $user->setAvatar($data['avatar'] ?? null);
         $user->setEmailVerified($data['email_verified'] ?? false);
         $user->setEmailVerifiedAt(
-            isset($data['email_verified_at']) 
-                ? new DateTimeImmutable($data['email_verified_at']) 
-                : null
+            isset($data['email_verified_at'])
+                ? new DateTimeImmutable($data['email_verified_at'])
+                : null,
         );
         $user->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
         $user->setUpdatedAt(new DateTimeImmutable($data['updated_at'] ?? 'now'));
         $user->setMetadata($data['metadata'] ?? null);
-        
+
         return $user;
     }
 

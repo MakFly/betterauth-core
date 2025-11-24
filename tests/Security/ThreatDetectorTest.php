@@ -28,7 +28,7 @@ class ThreatDetectorTest extends TestCase
             $suspiciousRepo,
             $deviceRepo,
             $geoService,
-            $fingerprintService
+            $fingerprintService,
         );
     }
 
@@ -64,7 +64,7 @@ class ThreatDetectorTest extends TestCase
             userAgent: 'New Browser',
             location: 'Unknown',
             detectedAt: (new DateTimeImmutable())->format('Y-m-d H:i:s'),
-            status: 'pending'
+            status: 'pending',
         );
 
         $suspiciousRepo->expects($this->once())
@@ -75,14 +75,14 @@ class ThreatDetectorTest extends TestCase
             $suspiciousRepo,
             $deviceRepo,
             $geoService,
-            $fingerprintService
+            $fingerprintService,
         );
 
         $result = $detector->detectSuspiciousActivity(
             userId: 'user-123',
             activityType: 'login',
             ipAddress: '192.168.1.1',
-            userAgent: 'New Browser'
+            userAgent: 'New Browser',
         );
 
         $this->assertInstanceOf(SuspiciousActivity::class, $result);

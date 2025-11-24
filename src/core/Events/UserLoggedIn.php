@@ -14,7 +14,7 @@ class UserLoggedIn extends AuthEvent
     public function __construct(
         public readonly \BetterAuth\Core\Entities\User $user,
         public readonly Session $session,
-        array $metadata = []
+        array $metadata = [],
     ) {
         parent::__construct($user, $metadata);
     }

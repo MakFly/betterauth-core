@@ -19,14 +19,12 @@ class PluginConfiguredEvent
     public function __construct(
         public readonly PluginInterface $plugin,
         public readonly array $config,
-        public readonly array $previousConfig = []
+        public readonly array $previousConfig = [],
     ) {
     }
 
     /**
      * Get the plugin name.
-     *
-     * @return string
      */
     public function getPluginName(): string
     {

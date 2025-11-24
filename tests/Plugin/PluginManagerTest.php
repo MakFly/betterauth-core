@@ -47,22 +47,27 @@ class PluginManagerTest extends TestCase
             public function __construct(private string $name, private bool &$calledRef)
             {
             }
+
             public function getName(): string
             {
                 return $this->name;
             }
+
             public function getVersion(): string
             {
                 return '1.0.0';
             }
+
             public function getDependencies(): array
             {
                 return [];
             }
+
             public function isEnabled(): bool
             {
                 return true;
             }
+
             public function getConfig(): array
             {
                 return [];
@@ -89,26 +94,32 @@ class PluginManagerTest extends TestCase
             public function __construct(private string $name)
             {
             }
+
             public function getName(): string
             {
                 return $this->name;
             }
+
             public function getVersion(): string
             {
                 return '1.0.0';
             }
+
             public function getDependencies(): array
             {
                 return [];
             }
+
             public function isEnabled(): bool
             {
                 return true;
             }
+
             public function getConfig(): array
             {
                 return [];
             }
+
             public function install(PluginContext $context): void
             {
             }

@@ -38,6 +38,7 @@ abstract class BaseToken
     public function setToken(string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 
@@ -49,6 +50,7 @@ abstract class BaseToken
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -60,6 +62,7 @@ abstract class BaseToken
     public function setExpiresAt(DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
+
         return $this;
     }
 
@@ -71,6 +74,7 @@ abstract class BaseToken
     public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -82,6 +86,7 @@ abstract class BaseToken
     public function setUsed(bool $used): self
     {
         $this->used = $used;
+
         return $this;
     }
 

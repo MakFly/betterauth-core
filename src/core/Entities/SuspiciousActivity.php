@@ -17,7 +17,7 @@ final readonly class SuspiciousActivity
         public string $detectedAt,
         public string $status,
         public ?string $resolvedAt = null,
-        public ?array $details = null
+        public ?array $details = null,
     ) {
     }
 
@@ -34,7 +34,7 @@ final readonly class SuspiciousActivity
             detectedAt: $data['detected_at'],
             status: $data['status'],
             resolvedAt: $data['resolved_at'] ?? null,
-            details: $data['details'] ?? null
+            details: $data['details'] ?? null,
         );
     }
 

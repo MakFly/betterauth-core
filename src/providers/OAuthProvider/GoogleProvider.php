@@ -44,7 +44,7 @@ final class GoogleProvider extends AbstractOAuthProvider
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -60,7 +60,7 @@ final class GoogleProvider extends AbstractOAuthProvider
             $this->getUserInfoEndpoint(),
             'GET',
             [],
-            ['Authorization' => "Bearer $accessToken"]
+            ['Authorization' => "Bearer $accessToken"],
         );
 
         return new ProviderUser(

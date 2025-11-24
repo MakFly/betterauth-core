@@ -56,7 +56,7 @@ final class AppleProvider extends AbstractOAuthProvider
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -76,7 +76,7 @@ final class AppleProvider extends AbstractOAuthProvider
         // For now, we'll need to handle this differently in the callback
         // The user info comes in the initial response
         throw new \RuntimeException(
-            'Apple provider requires special handling. Use the id_token from the token response.'
+            'Apple provider requires special handling. Use the id_token from the token response.',
         );
     }
 
@@ -84,7 +84,6 @@ final class AppleProvider extends AbstractOAuthProvider
      * Decode Apple ID Token to get user information.
      *
      * @param string $idToken The JWT ID token from Apple
-     * @return ProviderUser
      */
     public function getUserInfoFromIdToken(string $idToken): ProviderUser
     {
@@ -145,6 +144,7 @@ final class AppleProvider extends AbstractOAuthProvider
      * @param string $keyId Your Apple Key ID
      * @param string $privateKey The private key content (ES256)
      * @param int $expiresIn Expiration time in seconds (max 6 months)
+     *
      * @return string The JWT client secret
      */
     public static function generateClientSecret(
@@ -152,7 +152,7 @@ final class AppleProvider extends AbstractOAuthProvider
         string $clientId,
         string $keyId,
         string $privateKey,
-        int $expiresIn = 86400 * 180 // 6 months
+        int $expiresIn = 86400 * 180, // 6 months
     ): string {
         $header = [
             'alg' => 'ES256',

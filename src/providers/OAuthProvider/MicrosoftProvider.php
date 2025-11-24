@@ -16,7 +16,7 @@ final class MicrosoftProvider extends AbstractOAuthProvider
         string $clientId,
         string $clientSecret,
         string $redirectUri,
-        private readonly string $tenant = 'common'
+        private readonly string $tenant = 'common',
     ) {
         parent::__construct($clientId, $clientSecret, $redirectUri);
     }
@@ -53,7 +53,7 @@ final class MicrosoftProvider extends AbstractOAuthProvider
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -69,7 +69,7 @@ final class MicrosoftProvider extends AbstractOAuthProvider
             $this->getUserInfoEndpoint(),
             'GET',
             [],
-            ['Authorization' => "Bearer $accessToken"]
+            ['Authorization' => "Bearer $accessToken"],
         );
 
         return new ProviderUser(

@@ -37,14 +37,16 @@ final class SessionService
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      * @param array<string, mixed> $metadata Additional session metadata
+     *
      * @return Session The created session
+     *
      * @throws \Exception
      */
     public function create(
         User $user,
         string $ipAddress,
         string $userAgent,
-        array $metadata = []
+        array $metadata = [],
     ): Session {
         $this->logger->info('Creating new session', [
             'user_id' => $user->getId(),
@@ -77,6 +79,7 @@ final class SessionService
                 'ip_address' => $ipAddress,
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -85,7 +88,9 @@ final class SessionService
      * Validate and retrieve a session by token.
      *
      * @param string $token The session token
+     *
      * @return Session The valid session
+     *
      * @throws SessionExpiredException
      */
     public function validate(string $token): Session
@@ -100,6 +105,7 @@ final class SessionService
             $this->logger->warning('Session validation failed: Session not found', [
                 'session_token' => substr($token, 0, 10) . '...',
             ]);
+
             throw new SessionExpiredException('Session not found');
         }
 
@@ -127,7 +133,9 @@ final class SessionService
      * Refresh a session's expiration time.
      *
      * @param string $token The session token
+     *
      * @return Session The refreshed session
+     *
      * @throws SessionExpiredException
      */
     public function refresh(string $token): Session
@@ -159,6 +167,7 @@ final class SessionService
                 'session_token' => substr($token, 0, 10) . '...',
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -167,6 +176,7 @@ final class SessionService
      * Delete a session.
      *
      * @param string $token The session token
+     *
      * @return bool True if deleted, false otherwise
      */
     public function delete(string $token): bool
@@ -194,6 +204,7 @@ final class SessionService
      * Delete all sessions for a user.
      *
      * @param string $userId The user ID
+     *
      * @return int Number of sessions deleted
      */
     public function deleteAllForUser(string $userId): int
@@ -214,6 +225,7 @@ final class SessionService
      * Get all active sessions for a user.
      *
      * @param string $userId The user ID
+     *
      * @return Session[] Array of active sessions
      */
     public function getAllForUser(string $userId): array

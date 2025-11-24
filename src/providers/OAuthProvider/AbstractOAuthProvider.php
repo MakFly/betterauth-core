@@ -21,17 +21,16 @@ abstract class AbstractOAuthProvider implements OAuthProviderInterface
     /**
      * Make an HTTP request.
      *
-     * @param string $url
-     * @param string $method
      * @param array<string, mixed> $data
      * @param array<string, string> $headers
+     *
      * @return array<string, mixed>
      */
     protected function httpRequest(
         string $url,
         string $method = 'GET',
         array $data = [],
-        array $headers = []
+        array $headers = [],
     ): array {
         $ch = curl_init();
 
@@ -71,6 +70,7 @@ abstract class AbstractOAuthProvider implements OAuthProviderInterface
      * Build headers array.
      *
      * @param array<string, string> $headers
+     *
      * @return string[]
      */
     protected function buildHeaders(array $headers): array
@@ -85,22 +85,16 @@ abstract class AbstractOAuthProvider implements OAuthProviderInterface
 
     /**
      * Get the authorization endpoint URL.
-     *
-     * @return string
      */
     abstract protected function getAuthorizationEndpoint(): string;
 
     /**
      * Get the token endpoint URL.
-     *
-     * @return string
      */
     abstract protected function getTokenEndpoint(): string;
 
     /**
      * Get the user info endpoint URL.
-     *
-     * @return string
      */
     abstract protected function getUserInfoEndpoint(): string;
 

@@ -15,7 +15,7 @@ class PdoTeamMemberRepository implements TeamMemberRepositoryInterface
 {
     public function __construct(
         private readonly PDO $pdo,
-        private readonly string $tableName = 'team_members'
+        private readonly string $tableName = 'team_members',
     ) {
     }
 

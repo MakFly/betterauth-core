@@ -18,7 +18,7 @@ final class ThreatDetector
         private SuspiciousActivityRepositoryInterface $suspiciousActivityRepository,
         private DeviceInfoRepositoryInterface $deviceInfoRepository,
         private GeolocationService $geolocationService,
-        private DeviceFingerprintService $fingerprintService
+        private DeviceFingerprintService $fingerprintService,
     ) {
     }
 
@@ -27,7 +27,7 @@ final class ThreatDetector
         string $activityType,
         ?string $ipAddress = null,
         ?string $userAgent = null,
-        ?array $details = null
+        ?array $details = null,
     ): ?SuspiciousActivity {
         $riskLevel = $this->assessRiskLevel($userId, $ipAddress, $userAgent);
 

@@ -17,7 +17,9 @@ final class Crypto
      * Generate a cryptographically secure random string.
      *
      * @param int $length The length of the string
+     *
      * @return string The random string (hex encoded)
+     *
      * @throws Exception
      */
     public static function randomString(int $length = 32): string
@@ -29,7 +31,9 @@ final class Crypto
      * Generate a cryptographically secure random token.
      *
      * @param int $bytes Number of random bytes
+     *
      * @return string The random token (base64url encoded)
+     *
      * @throws Exception
      */
     public static function randomToken(int $bytes = 32): string
@@ -42,7 +46,9 @@ final class Crypto
      *
      * @param int $min Minimum value
      * @param int $max Maximum value
+     *
      * @return int The random integer
+     *
      * @throws Exception
      */
     public static function randomInt(int $min, int $max): int
@@ -54,6 +60,7 @@ final class Crypto
      * Base64url encode a string.
      *
      * @param string $data The data to encode
+     *
      * @return string The base64url encoded string
      */
     public static function base64UrlEncode(string $data): string
@@ -65,7 +72,8 @@ final class Crypto
      * Base64url decode a string.
      *
      * @param string $data The data to decode
-     * @return string|false The decoded string or false on failure
+     *
+     * @return false|string The decoded string or false on failure
      */
     public static function base64UrlDecode(string $data): string|false
     {
@@ -77,6 +85,7 @@ final class Crypto
      *
      * @param string $value The value to hash
      * @param string $algorithm The hash algorithm (default: sha256)
+     *
      * @return string The hashed value
      */
     public static function hash(string $value, string $algorithm = 'sha256'): string
@@ -89,6 +98,7 @@ final class Crypto
      *
      * @param string $known The known string
      * @param string $user The user-supplied string
+     *
      * @return bool True if strings are equal, false otherwise
      */
     public static function timingSafeEquals(string $known, string $user): bool

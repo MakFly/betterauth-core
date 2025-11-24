@@ -13,7 +13,7 @@ final class RateLimitException extends AuthException
 {
     public function __construct(
         string $message = 'Too many attempts. Please try again later.',
-        public readonly int $retryAfter = 60
+        public readonly int $retryAfter = 60,
     ) {
         parent::__construct($message, 429);
     }

@@ -41,6 +41,7 @@ class RefreshToken
     public function setToken(string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 
@@ -52,6 +53,7 @@ class RefreshToken
     public function setUserId(string $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -63,6 +65,7 @@ class RefreshToken
     public function setExpiresAt(DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
+
         return $this;
     }
 
@@ -74,6 +77,7 @@ class RefreshToken
     public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -85,6 +89,7 @@ class RefreshToken
     public function setRevoked(bool $revoked): self
     {
         $this->revoked = $revoked;
+
         return $this;
     }
 
@@ -96,6 +101,7 @@ class RefreshToken
     public function setReplacedBy(?string $replacedBy): self
     {
         $this->replacedBy = $replacedBy;
+
         return $this;
     }
 
@@ -116,7 +122,7 @@ class RefreshToken
         $token->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
         $token->setRevoked($data['revoked'] ?? false);
         $token->setReplacedBy($data['replaced_by'] ?? null);
-        
+
         return $token;
     }
 

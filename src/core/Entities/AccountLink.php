@@ -25,7 +25,7 @@ class AccountLink
         public readonly bool $isPrimary,         // Is this the primary account link?
         public readonly string $status,          // 'pending', 'verified', 'revoked'
         public readonly DateTimeImmutable $linkedAt,
-        public readonly ?array $metadata = null  // Avatar, name, tokens, etc.
+        public readonly ?array $metadata = null,  // Avatar, name, tokens, etc.
     ) {
     }
 
@@ -33,7 +33,6 @@ class AccountLink
      * Create from array.
      *
      * @param array<string, mixed> $data
-     * @return self
      */
     public static function fromArray(array $data): self
     {
@@ -50,7 +49,7 @@ class AccountLink
                 : (isset($data['linkedAt']) && $data['linkedAt'] instanceof DateTimeImmutable
                     ? $data['linkedAt']
                     : new DateTimeImmutable()),
-            metadata: $data['metadata'] ?? null
+            metadata: $data['metadata'] ?? null,
         );
     }
 
@@ -76,8 +75,6 @@ class AccountLink
 
     /**
      * Check if the account link is verified.
-     *
-     * @return bool
      */
     public function isVerified(): bool
     {
@@ -86,8 +83,6 @@ class AccountLink
 
     /**
      * Check if the account link is pending.
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -96,8 +91,6 @@ class AccountLink
 
     /**
      * Check if the account link is revoked.
-     *
-     * @return bool
      */
     public function isRevoked(): bool
     {
@@ -106,9 +99,6 @@ class AccountLink
 
     /**
      * Create a copy with updated primary status.
-     *
-     * @param bool $isPrimary
-     * @return self
      */
     public function withPrimaryStatus(bool $isPrimary): self
     {
@@ -121,15 +111,12 @@ class AccountLink
             isPrimary: $isPrimary,
             status: $this->status,
             linkedAt: $this->linkedAt,
-            metadata: $this->metadata
+            metadata: $this->metadata,
         );
     }
 
     /**
      * Create a copy with updated status.
-     *
-     * @param string $status
-     * @return self
      */
     public function withStatus(string $status): self
     {
@@ -142,7 +129,7 @@ class AccountLink
             isPrimary: $this->isPrimary,
             status: $status,
             linkedAt: $this->linkedAt,
-            metadata: $this->metadata
+            metadata: $this->metadata,
         );
     }
 }

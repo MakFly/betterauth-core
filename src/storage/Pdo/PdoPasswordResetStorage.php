@@ -37,7 +37,13 @@ class PdoPasswordResetStorage implements PasswordResetStorageInterface
             'created_at' => $createdAt->format('Y-m-d H:i:s'),
         ]);
 
-        return new PasswordResetToken($token, $email, $expiresAt, $createdAt, false);
+        return PasswordResetToken::fromArray([
+            'token' => $token,
+            'email' => $email,
+            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            'created_at' => $createdAt->format('Y-m-d H:i:s'),
+            'used' => false,
+        ]);
     }
 
     public function findByToken(string $token): ?PasswordResetToken
@@ -83,8 +89,6 @@ class PdoPasswordResetStorage implements PasswordResetStorageInterface
 
     /**
      * Create the password reset tokens table.
-     *
-     * @return bool
      */
     public function createTable(): bool
     {

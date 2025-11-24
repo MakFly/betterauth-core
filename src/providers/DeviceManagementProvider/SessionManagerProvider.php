@@ -18,7 +18,7 @@ final readonly class SessionManagerProvider
         private SessionActivityRepositoryInterface $sessionActivityRepository,
         private DeviceDetector $deviceDetector,
         private GeolocationService $geolocationService,
-        private DeviceFingerprintService $fingerprintService
+        private DeviceFingerprintService $fingerprintService,
     ) {
     }
 
@@ -26,7 +26,7 @@ final readonly class SessionManagerProvider
         string $userId,
         ?string $userAgent,
         ?string $ipAddress,
-        ?array $metadata = null
+        ?array $metadata = null,
     ): DeviceInfo {
         $fingerprint = $this->fingerprintService->generate($userAgent, $ipAddress);
         $existingDevice = $this->deviceInfoRepository->findByFingerprint($userId, $fingerprint);
@@ -66,7 +66,7 @@ final readonly class SessionManagerProvider
         string $action,
         ?string $ipAddress = null,
         ?string $userAgent = null,
-        ?array $metadata = null
+        ?array $metadata = null,
     ): SessionActivity {
         $id = $this->sessionActivityRepository->generateId() ?? IdGenerator::ulid();
         $location = $this->geolocationService->getLocation($ipAddress);

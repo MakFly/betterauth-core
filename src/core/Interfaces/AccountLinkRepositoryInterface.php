@@ -25,6 +25,7 @@ interface AccountLinkRepositoryInterface
      * Create a new account link.
      *
      * @param array<string, mixed> $data Account link data
+     *
      * @return AccountLink Created account link
      */
     public function create(array $data): AccountLink;
@@ -33,6 +34,7 @@ interface AccountLinkRepositoryInterface
      * Find an account link by ID.
      *
      * @param string $id Account link ID
+     *
      * @return AccountLink|null Account link or null if not found
      */
     public function findById(string $id): ?AccountLink;
@@ -41,6 +43,7 @@ interface AccountLinkRepositoryInterface
      * Find all account links for a user.
      *
      * @param string $userId User ID
+     *
      * @return array<AccountLink> Array of account links
      */
     public function findByUserId(string $userId): array;
@@ -50,6 +53,7 @@ interface AccountLinkRepositoryInterface
      *
      * @param string $provider Provider name (e.g., 'google', 'github')
      * @param string $providerId Provider ID
+     *
      * @return AccountLink|null Account link or null if not found
      */
     public function findByProvider(string $provider, string $providerId): ?AccountLink;
@@ -59,6 +63,7 @@ interface AccountLinkRepositoryInterface
      *
      * @param string $userId User ID
      * @param string $provider Provider name
+     *
      * @return AccountLink|null Account link or null if not found
      */
     public function findByUserAndProvider(string $userId, string $provider): ?AccountLink;
@@ -67,6 +72,7 @@ interface AccountLinkRepositoryInterface
      * Get the primary account link for a user.
      *
      * @param string $userId User ID
+     *
      * @return AccountLink|null Primary account link or null
      */
     public function getPrimaryLink(string $userId): ?AccountLink;
@@ -77,6 +83,7 @@ interface AccountLinkRepositoryInterface
      *
      * @param string $userId User ID
      * @param string $provider Provider name
+     *
      * @return bool True if updated successfully
      */
     public function setPrimary(string $userId, string $provider): bool;
@@ -86,6 +93,7 @@ interface AccountLinkRepositoryInterface
      *
      * @param string $id Account link ID
      * @param array<string, mixed> $data Data to update
+     *
      * @return bool True if updated successfully
      */
     public function update(string $id, array $data): bool;
@@ -94,6 +102,7 @@ interface AccountLinkRepositoryInterface
      * Delete an account link.
      *
      * @param string $id Account link ID
+     *
      * @return bool True if deleted successfully
      */
     public function delete(string $id): bool;
@@ -102,6 +111,7 @@ interface AccountLinkRepositoryInterface
      * Delete all account links for a user.
      *
      * @param string $userId User ID
+     *
      * @return int Number of account links deleted
      */
     public function deleteAllForUser(string $userId): int;
@@ -110,6 +120,7 @@ interface AccountLinkRepositoryInterface
      * Count account links for a user.
      *
      * @param string $userId User ID
+     *
      * @return int Number of account links
      */
     public function countForUser(string $userId): int;
@@ -119,6 +130,7 @@ interface AccountLinkRepositoryInterface
      *
      * @param string $userId User ID
      * @param string $provider Provider name
+     *
      * @return bool True if already linked
      */
     public function isLinked(string $userId, string $provider): bool;

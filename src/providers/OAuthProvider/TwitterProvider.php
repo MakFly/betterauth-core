@@ -51,7 +51,7 @@ final class TwitterProvider extends AbstractOAuthProvider
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
                 'code_verifier' => $this->codeVerifier,
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -67,7 +67,7 @@ final class TwitterProvider extends AbstractOAuthProvider
             $this->getUserInfoEndpoint(),
             'GET',
             ['user.fields' => 'id,name,username,profile_image_url,verified'],
-            ['Authorization' => "Bearer $accessToken"]
+            ['Authorization' => "Bearer $accessToken"],
         );
 
         $userData = $response['data'] ?? [];

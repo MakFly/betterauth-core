@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace BetterAuth\Providers\PasswordResetProvider;
 
 use BetterAuth\Core\AuthManager;
-use BetterAuth\Core\Exceptions\InvalidTokenException;
 use BetterAuth\Core\Exceptions\RateLimitException;
-use BetterAuth\Core\Exceptions\UserNotFoundException;
 use BetterAuth\Core\Interfaces\EmailSenderInterface;
 use BetterAuth\Core\Interfaces\PasswordResetStorageInterface;
 use BetterAuth\Core\Interfaces\RateLimiterInterface;
@@ -35,7 +33,9 @@ final class PasswordResetProvider
      *
      * @param string $email The user's email
      * @param string|null $callbackUrl Optional callback URL (token will be appended)
+     *
      * @return array{success: bool} Result of the request
+     *
      * @throws RateLimitException
      * @throws \Exception
      */
@@ -48,7 +48,7 @@ final class PasswordResetProvider
 
             throw new RateLimitException(
                 message: 'Too many password reset attempts. Please try again later.',
-                retryAfter: $retryAfter
+                retryAfter: $retryAfter,
             );
         }
 
@@ -94,6 +94,7 @@ final class PasswordResetProvider
     public function requestReset(string $email, string $callbackUrl): bool
     {
         $result = $this->sendResetEmail($email, $callbackUrl);
+
         return $result['success'];
     }
 
@@ -101,6 +102,7 @@ final class PasswordResetProvider
      * Verify a password reset token.
      *
      * @param string $token The reset token
+     *
      * @return array{valid: bool, email?: string} Result of verification
      */
     public function verifyResetToken(string $token): array
@@ -122,6 +124,7 @@ final class PasswordResetProvider
     public function verifyToken(string $token): bool
     {
         $result = $this->verifyResetToken($token);
+
         return $result['valid'];
     }
 
@@ -130,6 +133,7 @@ final class PasswordResetProvider
      *
      * @param string $token The reset token
      * @param string $newPassword The new password
+     *
      * @return array{success: bool, error?: string} Result of password reset
      */
     public function resetPassword(string $token, string $newPassword): array
@@ -167,6 +171,7 @@ final class PasswordResetProvider
      * Cancel a password reset by deleting the token.
      *
      * @param string $token The reset token
+     *
      * @return bool True if cancelled, false otherwise
      */
     public function cancelReset(string $token): bool

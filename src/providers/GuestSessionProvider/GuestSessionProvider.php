@@ -16,7 +16,7 @@ final readonly class GuestSessionProvider
     public function __construct(
         private GuestSessionRepositoryInterface $guestSessionRepository,
         private UserRepositoryInterface $userRepository,
-        private int $sessionLifetime = 86400
+        private int $sessionLifetime = 86400,
     ) {
     }
 

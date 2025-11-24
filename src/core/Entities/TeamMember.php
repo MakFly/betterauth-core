@@ -25,7 +25,6 @@ class TeamMember
      * Create a TeamMember entity from an array of data.
      *
      * @param array<string, mixed> $data
-     * @return self
      */
     public static function fromArray(array $data): self
     {

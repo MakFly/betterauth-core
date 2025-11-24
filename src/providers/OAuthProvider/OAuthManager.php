@@ -29,8 +29,6 @@ final class OAuthManager
 
     /**
      * Register an OAuth provider.
-     *
-     * @param OAuthProviderInterface $provider
      */
     public function addProvider(OAuthProviderInterface $provider): void
     {
@@ -40,9 +38,10 @@ final class OAuthManager
     /**
      * Get the authorization URL for a provider.
      *
-     * @param string $providerName
      * @param array<string, mixed> $options
+     *
      * @return array{url: string, state: string}
+     *
      * @throws \Exception
      */
     public function getAuthorizationUrl(string $providerName, array $options = []): array
@@ -61,12 +60,8 @@ final class OAuthManager
     /**
      * Handle OAuth callback and create/login user.
      *
-     * @param string $providerName
-     * @param string $code
-     * @param string $redirectUri
-     * @param string $ipAddress
-     * @param string $userAgent
      * @return array{user: User, session: Session, isNewUser: bool}
+     *
      * @throws \Exception
      */
     public function handleCallback(
@@ -74,7 +69,7 @@ final class OAuthManager
         string $code,
         string $redirectUri,
         string $ipAddress,
-        string $userAgent
+        string $userAgent,
     ): array {
         $provider = $this->getProvider($providerName);
 
@@ -147,8 +142,6 @@ final class OAuthManager
     /**
      * Get a provider by name.
      *
-     * @param string $name
-     * @return OAuthProviderInterface
      * @throws \InvalidArgumentException
      */
     private function getProvider(string $name): OAuthProviderInterface

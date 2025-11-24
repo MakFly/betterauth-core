@@ -15,7 +15,7 @@ class PdoOrganizationRepository implements OrganizationRepositoryInterface
 {
     public function __construct(
         private readonly PDO $pdo,
-        private readonly string $tableName = 'organizations'
+        private readonly string $tableName = 'organizations',
     ) {
     }
 

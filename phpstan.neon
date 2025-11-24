@@ -17,3 +17,5 @@ parameters:
         -
             message: '#Dead catch - Throwable is never thrown in the try block#'
             path: src/core/Plugin/PluginRegistry.php
+        # Doctrine ORM attributes - optional dependency not included in core
+        - '#Attribute class Doctrine\\ORM\\Mapping\\.* does not exist#'

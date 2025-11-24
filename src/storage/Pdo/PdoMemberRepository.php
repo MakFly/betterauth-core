@@ -15,7 +15,7 @@ class PdoMemberRepository implements MemberRepositoryInterface
 {
     public function __construct(
         private readonly PDO $pdo,
-        private readonly string $tableName = 'members'
+        private readonly string $tableName = 'members',
     ) {
     }
 

@@ -20,7 +20,7 @@ final readonly class DeviceInfo
         public bool $isTrusted,
         public string $firstSeenAt,
         public string $lastSeenAt,
-        public ?array $metadata = null
+        public ?array $metadata = null,
     ) {
     }
 
@@ -40,7 +40,7 @@ final readonly class DeviceInfo
             isTrusted: $data['is_trusted'] ?? false,
             firstSeenAt: $data['first_seen_at'],
             lastSeenAt: $data['last_seen_at'],
-            metadata: $data['metadata'] ?? null
+            metadata: $data['metadata'] ?? null,
         );
     }
 

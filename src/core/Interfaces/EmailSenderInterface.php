@@ -14,6 +14,7 @@ interface EmailSenderInterface
      *
      * @param string $to Recipient email address
      * @param string $magicLink The magic link URL
+     *
      * @return bool True if sent successfully, false otherwise
      */
     public function sendMagicLink(string $to, string $magicLink): bool;
@@ -23,6 +24,7 @@ interface EmailSenderInterface
      *
      * @param string $to Recipient email address
      * @param string $verificationLink The verification link URL
+     *
      * @return bool True if sent successfully, false otherwise
      */
     public function sendVerificationEmail(string $to, string $verificationLink): bool;
@@ -32,6 +34,7 @@ interface EmailSenderInterface
      *
      * @param string $to Recipient email address
      * @param string $resetLink The password reset link URL
+     *
      * @return bool True if sent successfully, false otherwise
      */
     public function sendPasswordReset(string $to, string $resetLink): bool;
@@ -41,6 +44,7 @@ interface EmailSenderInterface
      *
      * @param string $to Recipient email address
      * @param string $code The 2FA code
+     *
      * @return bool True if sent successfully, false otherwise
      */
     public function sendTwoFactorCode(string $to, string $code): bool;

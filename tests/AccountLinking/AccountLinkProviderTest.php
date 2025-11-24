@@ -24,17 +24,17 @@ class AccountLinkProviderTest extends TestCase
 
     public function testLinkAccount(): void
     {
-        $user = new User(
-            id: 'user-123',
-            email: 'user@example.com',
-            passwordHash: null,
-            name: 'Test User',
-            avatar: null,
-            emailVerified: true,
-            emailVerifiedAt: null,
-            createdAt: new DateTimeImmutable(),
-            updatedAt: new DateTimeImmutable()
-        );
+        $user = User::fromArray([
+            'id' => 'user-123',
+            'email' => 'user@example.com',
+            'password_hash' => null,
+            'name' => 'Test User',
+            'avatar' => null,
+            'email_verified' => true,
+            'email_verified_at' => null,
+            'created_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'updated_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ]);
 
         $this->repository->expects($this->once())
             ->method('isLinked')
@@ -63,7 +63,7 @@ class AccountLinkProviderTest extends TestCase
             providerEmail: 'user@gmail.com',
             isPrimary: true,
             status: 'verified',
-            linkedAt: new DateTimeImmutable()
+            linkedAt: new DateTimeImmutable(),
         );
 
         $this->repository->expects($this->once())
@@ -81,17 +81,17 @@ class AccountLinkProviderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Provider 'google' is already linked to this user");
 
-        $user = new User(
-            id: 'user-123',
-            email: 'user@example.com',
-            passwordHash: null,
-            name: 'Test User',
-            avatar: null,
-            emailVerified: true,
-            emailVerifiedAt: null,
-            createdAt: new DateTimeImmutable(),
-            updatedAt: new DateTimeImmutable()
-        );
+        $user = User::fromArray([
+            'id' => 'user-123',
+            'email' => 'user@example.com',
+            'password_hash' => null,
+            'name' => 'Test User',
+            'avatar' => null,
+            'email_verified' => true,
+            'email_verified_at' => null,
+            'created_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'updated_at' => (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ]);
 
         $this->repository->expects($this->once())
             ->method('isLinked')

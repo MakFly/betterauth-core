@@ -21,7 +21,7 @@ class MagicLinkToken extends BaseToken
         $token->setExpiresAt(new DateTimeImmutable($data['expires_at']));
         $token->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
         $token->setUsed($data['used'] ?? false);
-        
+
         return $token;
     }
 

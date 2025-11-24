@@ -43,7 +43,7 @@ final class FacebookProvider extends AbstractOAuthProvider
                 'client_secret' => $this->clientSecret,
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -61,7 +61,7 @@ final class FacebookProvider extends AbstractOAuthProvider
             [
                 'fields' => 'id,name,email,picture.type(large)',
                 'access_token' => $accessToken,
-            ]
+            ],
         );
 
         return new ProviderUser(

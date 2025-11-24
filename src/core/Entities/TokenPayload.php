@@ -22,7 +22,6 @@ class TokenPayload
      * Create a TokenPayload from an array of data.
      *
      * @param array<string, mixed> $data
-     * @return self
      */
     public static function fromArray(array $data): self
     {
@@ -58,8 +57,6 @@ class TokenPayload
 
     /**
      * Check if the token is expired.
-     *
-     * @return bool
      */
     public function isExpired(): bool
     {
@@ -68,8 +65,6 @@ class TokenPayload
 
     /**
      * Check if the token is still valid.
-     *
-     * @return bool
      */
     public function isValid(): bool
     {

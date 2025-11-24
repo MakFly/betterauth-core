@@ -42,6 +42,7 @@ class TotpData
     public function setUserId(string $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -53,6 +54,7 @@ class TotpData
     public function setSecret(string $secret): self
     {
         $this->secret = $secret;
+
         return $this;
     }
 
@@ -64,6 +66,7 @@ class TotpData
     public function setEnabled(bool $enabled): self
     {
         $this->enabled = $enabled;
+
         return $this;
     }
 
@@ -75,6 +78,7 @@ class TotpData
     public function setBackupCodes(array $backupCodes): self
     {
         $this->backupCodes = $backupCodes;
+
         return $this;
     }
 
@@ -86,6 +90,7 @@ class TotpData
     public function setLast2faVerifiedAt(?\DateTimeImmutable $last2faVerifiedAt): self
     {
         $this->last2faVerifiedAt = $last2faVerifiedAt;
+
         return $this;
     }
 }

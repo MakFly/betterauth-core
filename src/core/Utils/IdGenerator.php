@@ -17,6 +17,7 @@ final class IdGenerator
      * Generate a UUID v4.
      *
      * @return string The UUID
+     *
      * @throws Exception
      */
     public static function uuid(): string
@@ -35,7 +36,9 @@ final class IdGenerator
      * Generate a short unique ID (nanoid style).
      *
      * @param int $length The length of the ID
+     *
      * @return string The ID
+     *
      * @throws Exception
      */
     public static function nanoid(int $length = 21): string
@@ -55,6 +58,7 @@ final class IdGenerator
      * Generate a ULID (Universally Unique Lexicographically Sortable Identifier).
      *
      * @return string The ULID
+     *
      * @throws Exception
      */
     public static function ulid(): string
@@ -76,7 +80,6 @@ final class IdGenerator
      * Encode bytes to Crockford's Base32.
      *
      * @param array<int> $bytes
-     * @return string
      */
     private static function encodeBase32(array $bytes): string
     {

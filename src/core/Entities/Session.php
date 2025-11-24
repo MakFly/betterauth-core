@@ -53,6 +53,7 @@ class Session
     public function setToken(string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 
@@ -64,6 +65,7 @@ class Session
     public function setUserId(string $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -75,6 +77,7 @@ class Session
     public function setExpiresAt(DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
+
         return $this;
     }
 
@@ -86,6 +89,7 @@ class Session
     public function setIpAddress(string $ipAddress): self
     {
         $this->ipAddress = $ipAddress;
+
         return $this;
     }
 
@@ -97,6 +101,7 @@ class Session
     public function setUserAgent(string $userAgent): self
     {
         $this->userAgent = $userAgent;
+
         return $this;
     }
 
@@ -108,6 +113,7 @@ class Session
     public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -119,6 +125,7 @@ class Session
     public function setUpdatedAt(DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -130,6 +137,7 @@ class Session
     public function setMetadata(?array $metadata): self
     {
         $this->metadata = $metadata;
+
         return $this;
     }
 
@@ -141,6 +149,7 @@ class Session
     public function setActiveOrganizationId(?string $activeOrganizationId): self
     {
         $this->activeOrganizationId = $activeOrganizationId;
+
         return $this;
     }
 
@@ -152,6 +161,7 @@ class Session
     public function setActiveTeamId(?string $activeTeamId): self
     {
         $this->activeTeamId = $activeTeamId;
+
         return $this;
     }
 
@@ -168,7 +178,7 @@ class Session
         $session->setMetadata($data['metadata'] ?? null);
         $session->setActiveOrganizationId($data['active_organization_id'] ?? null);
         $session->setActiveTeamId($data['active_team_id'] ?? null);
-        
+
         return $session;
     }
 

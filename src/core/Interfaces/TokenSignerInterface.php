@@ -14,6 +14,7 @@ interface TokenSignerInterface
      *
      * @param array<string, mixed> $payload The payload to sign
      * @param int $expiresIn Expiration time in seconds
+     *
      * @return string The signed token
      */
     public function sign(array $payload, int $expiresIn): string;
@@ -22,6 +23,7 @@ interface TokenSignerInterface
      * Verify and parse a token.
      *
      * @param string $token The token to verify
+     *
      * @return array<string, mixed>|null The payload if valid, null otherwise
      */
     public function verify(string $token): ?array;
@@ -30,6 +32,7 @@ interface TokenSignerInterface
      * Extract payload without verification (use with caution).
      *
      * @param string $token The token
+     *
      * @return array<string, mixed>|null The payload if parseable, null otherwise
      */
     public function decode(string $token): ?array;

@@ -19,7 +19,7 @@ final class TokenService implements TokenSignerInterface
     private const HEADER = 'v4.local.';
 
     public function __construct(
-        private readonly string $secretKey
+        private readonly string $secretKey,
     ) {
         if (strlen($secretKey) < 32) {
             throw new \InvalidArgumentException('Secret key must be at least 32 characters');
@@ -108,10 +108,6 @@ final class TokenService implements TokenSignerInterface
 
     /**
      * Simplified encryption using XChaCha20-Poly1305.
-     *
-     * @param string $plaintext
-     * @param string $nonce
-     * @return string
      */
     private function encrypt(string $plaintext, string $nonce): string
     {
@@ -122,7 +118,7 @@ final class TokenService implements TokenSignerInterface
                 $plaintext,
                 '',
                 $nonce,
-                $key
+                $key,
             );
         }
 
@@ -133,9 +129,6 @@ final class TokenService implements TokenSignerInterface
     /**
      * Simplified decryption.
      *
-     * @param string $ciphertext
-     * @param string $nonce
-     * @return string
      * @throws InvalidTokenException
      */
     private function decrypt(string $ciphertext, string $nonce): string
@@ -147,7 +140,7 @@ final class TokenService implements TokenSignerInterface
                 $ciphertext,
                 '',
                 $nonce,
-                $key
+                $key,
             );
 
             if ($decrypted === false) {
@@ -171,7 +164,7 @@ final class TokenService implements TokenSignerInterface
             $key,
             OPENSSL_RAW_DATA,
             substr($nonce, 0, 12),
-            $tag
+            $tag,
         );
 
         if ($decrypted === false) {

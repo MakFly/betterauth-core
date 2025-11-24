@@ -179,8 +179,6 @@ class PdoUserRepository implements UserRepositoryInterface
 
     /**
      * Create the users table.
-     *
-     * @return bool
      */
     public function createTable(): bool
     {

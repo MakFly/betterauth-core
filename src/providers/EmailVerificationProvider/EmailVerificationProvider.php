@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\EmailVerificationProvider;
 
-use BetterAuth\Core\Exceptions\InvalidTokenException;
 use BetterAuth\Core\Exceptions\RateLimitException;
 use BetterAuth\Core\Exceptions\UserNotFoundException;
 use BetterAuth\Core\Interfaces\EmailSenderInterface;
@@ -31,7 +30,9 @@ final class EmailVerificationProvider
      * @param string $userId The user ID
      * @param string $email The user's email address
      * @param string|null $callbackUrl Optional callback URL for the verification link
+     *
      * @return array{success: bool, expiresIn: int} Result with expiration time
+     *
      * @throws RateLimitException
      * @throws UserNotFoundException
      */
@@ -47,7 +48,7 @@ final class EmailVerificationProvider
             throw new UserNotFoundException();
         }
 
-        if ($user->emailVerified) {
+        if ($user->isEmailVerified()) {
             return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
         }
 
@@ -63,10 +64,10 @@ final class EmailVerificationProvider
             // This prevents hardcoded URLs that won't work in Docker or different environments
             throw new \InvalidArgumentException('callbackUrl is required for email verification. Please provide it when calling sendVerificationEmail.');
         }
-        
+
         $separator = str_contains($callbackUrl, '?') ? '&' : '?';
         $verificationLink = $callbackUrl . $separator . 'token=' . urlencode($token);
-        
+
         $this->emailSender->sendVerificationEmail($email, $verificationLink);
 
         return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
@@ -76,6 +77,7 @@ final class EmailVerificationProvider
      * Verify an email using a verification token.
      *
      * @param string $token The verification token
+     *
      * @return array{success: bool, error?: string} Result of verification
      */
     public function verifyEmail(string $token): array
@@ -86,15 +88,15 @@ final class EmailVerificationProvider
             return ['success' => false, 'error' => 'Invalid or expired verification token'];
         }
 
-        $user = $this->userRepository->findByEmail($verificationToken->email);
+        $user = $this->userRepository->findByEmail($verificationToken->getEmail());
         if ($user === null) {
             return ['success' => false, 'error' => 'User not found'];
         }
 
         $this->userRepository->verifyEmail($user->getId());
         $this->verificationStorage->markAsUsed($token);
-        $this->verificationStorage->deleteByEmail($verificationToken->email);
-        $this->rateLimiter?->clear("email_verification:{$verificationToken->email}");
+        $this->verificationStorage->deleteByEmail($verificationToken->getEmail());
+        $this->rateLimiter?->clear("email_verification:{$verificationToken->getEmail()}");
 
         return ['success' => true];
     }

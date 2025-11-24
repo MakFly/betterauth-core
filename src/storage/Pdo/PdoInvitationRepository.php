@@ -15,7 +15,7 @@ class PdoInvitationRepository implements InvitationRepositoryInterface
 {
     public function __construct(
         private readonly PDO $pdo,
-        private readonly string $tableName = 'invitations'
+        private readonly string $tableName = 'invitations',
     ) {
     }
 

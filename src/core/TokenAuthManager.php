@@ -55,6 +55,7 @@ final class TokenAuthManager
                 'email' => $email,
                 'reason' => $user === null ? 'user_not_found' : 'no_password',
             ]);
+
             throw new InvalidCredentialsException();
         }
 
@@ -67,6 +68,7 @@ final class TokenAuthManager
                 'email' => $email,
                 'user_id' => $user->getId(),
             ]);
+
             throw new InvalidCredentialsException();
         }
 
@@ -85,6 +87,7 @@ final class TokenAuthManager
                 'user_id' => $user->getId(),
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -106,6 +109,7 @@ final class TokenAuthManager
                 'found' => $refreshToken !== null,
                 'valid' => $refreshToken?->isValid() ?? false,
             ]);
+
             throw new InvalidTokenException('Invalid or expired refresh token');
         }
 
@@ -115,6 +119,7 @@ final class TokenAuthManager
                 'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
                 'user_id' => $refreshToken->getUserId(),
             ]);
+
             throw new InvalidTokenException('User not found');
         }
 
@@ -138,6 +143,7 @@ final class TokenAuthManager
                 'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -154,6 +160,7 @@ final class TokenAuthManager
                 $this->logger->debug('Token verification failed: Invalid payload', [
                     'token' => substr($accessToken, 0, 20) . '...',
                 ]);
+
                 throw new InvalidTokenException();
             }
 
@@ -162,6 +169,7 @@ final class TokenAuthManager
                 $this->logger->warning('Token verification failed: User not found', [
                     'user_id' => $payload['sub'],
                 ]);
+
                 throw new InvalidTokenException('User not found');
             }
 
@@ -173,6 +181,7 @@ final class TokenAuthManager
                 'token' => substr($accessToken, 0, 20) . '...',
                 'error' => $e->getMessage(),
             ]);
+
             throw new InvalidTokenException('Token verification failed');
         }
     }
@@ -218,6 +227,7 @@ final class TokenAuthManager
                 'user_id' => $user->getId(),
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -240,7 +250,7 @@ final class TokenAuthManager
                         'name' => $user->getName(),
                     ],
                 ],
-                $this->config->tokenLifetime
+                $this->config->tokenLifetime,
             );
 
             // Create refresh token
@@ -274,6 +284,7 @@ final class TokenAuthManager
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }

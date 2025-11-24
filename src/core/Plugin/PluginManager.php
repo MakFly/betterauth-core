@@ -41,7 +41,7 @@ class PluginManager
     private $eventDispatcher = null;
 
     public function __construct(
-        AuthConfig $config
+        AuthConfig $config,
     ) {
         $this->context = new PluginContext($config);
     }
@@ -50,7 +50,7 @@ class PluginManager
      * Register a plugin.
      *
      * @param PluginInterface $plugin Plugin to register
-     * @return void
+     *
      * @throws \RuntimeException If plugin with same name already registered
      */
     public function register(PluginInterface $plugin): void
@@ -68,7 +68,6 @@ class PluginManager
      * Unregister a plugin.
      *
      * @param string $pluginName Name of plugin to unregister
-     * @return void
      */
     public function unregister(string $pluginName): void
     {
@@ -80,7 +79,7 @@ class PluginManager
      * Load a specific plugin.
      *
      * @param string $pluginName Name of plugin to load
-     * @return void
+     *
      * @throws \RuntimeException If plugin not found or dependencies not met
      */
     public function load(string $pluginName): void
@@ -118,8 +117,6 @@ class PluginManager
 
     /**
      * Load all registered plugins.
-     *
-     * @return void
      */
     public function loadAll(): void
     {
@@ -137,6 +134,7 @@ class PluginManager
      * Get a loaded plugin by name.
      *
      * @param string $pluginName Plugin name
+     *
      * @return PluginInterface|null Plugin instance or null if not loaded
      */
     public function getPlugin(string $pluginName): ?PluginInterface
@@ -168,6 +166,7 @@ class PluginManager
      * Check if a plugin is loaded.
      *
      * @param string $pluginName Plugin name
+     *
      * @return bool True if loaded
      */
     public function isLoaded(string $pluginName): bool
@@ -183,7 +182,6 @@ class PluginManager
      *
      * @param string $hookName Hook name
      * @param mixed $data Data to pass to callbacks
-     * @return void
      */
     public function executeHook(string $hookName, mixed $data): void
     {
@@ -192,8 +190,6 @@ class PluginManager
 
     /**
      * Get the plugin context.
-     *
-     * @return PluginContext
      */
     public function getContext(): PluginContext
     {
@@ -204,7 +200,6 @@ class PluginManager
      * Set an event dispatcher for plugin events.
      *
      * @param callable $dispatcher Function to dispatch events
-     * @return void
      */
     public function setEventDispatcher(callable $dispatcher): void
     {
@@ -215,7 +210,6 @@ class PluginManager
      * Dispatch a plugin event.
      *
      * @param object $event Event object
-     * @return void
      */
     private function dispatchEvent(object $event): void
     {

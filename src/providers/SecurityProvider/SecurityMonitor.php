@@ -14,7 +14,7 @@ final readonly class SecurityMonitor
 {
     public function __construct(
         private SecurityEventRepositoryInterface $securityEventRepository,
-        private GeolocationService $geolocationService
+        private GeolocationService $geolocationService,
     ) {
     }
 
@@ -24,7 +24,7 @@ final readonly class SecurityMonitor
         string $severity,
         ?string $ipAddress = null,
         ?string $userAgent = null,
-        ?array $details = null
+        ?array $details = null,
     ): SecurityEvent {
         $id = $this->securityEventRepository->generateId() ?? IdGenerator::ulid();
         $location = $this->geolocationService->getLocation($ipAddress);

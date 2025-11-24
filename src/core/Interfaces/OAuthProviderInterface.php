@@ -16,6 +16,7 @@ interface OAuthProviderInterface
      *
      * @param string $state CSRF protection state parameter
      * @param array<string, mixed> $options Additional options (scopes, etc.)
+     *
      * @return string The authorization URL
      */
     public function getAuthorizationUrl(string $state, array $options = []): string;
@@ -25,6 +26,7 @@ interface OAuthProviderInterface
      *
      * @param string $code The authorization code
      * @param string $redirectUri The redirect URI used in the authorization request
+     *
      * @return string The access token
      */
     public function getAccessToken(string $code, string $redirectUri): string;
@@ -33,6 +35,7 @@ interface OAuthProviderInterface
      * Get user information from the provider.
      *
      * @param string $accessToken The access token
+     *
      * @return ProviderUser The provider user information
      */
     public function getUserInfo(string $accessToken): ProviderUser;

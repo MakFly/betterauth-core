@@ -12,14 +12,12 @@ use BetterAuth\Core\Plugin\PluginInterface;
 class PluginLoadedEvent
 {
     public function __construct(
-        public readonly PluginInterface $plugin
+        public readonly PluginInterface $plugin,
     ) {
     }
 
     /**
      * Get the plugin name.
-     *
-     * @return string
      */
     public function getPluginName(): string
     {
@@ -28,8 +26,6 @@ class PluginLoadedEvent
 
     /**
      * Get the plugin version.
-     *
-     * @return string
      */
     public function getPluginVersion(): string
     {
@@ -38,8 +34,6 @@ class PluginLoadedEvent
 
     /**
      * Get the plugin instance.
-     *
-     * @return PluginInterface
      */
     public function getPlugin(): PluginInterface
     {

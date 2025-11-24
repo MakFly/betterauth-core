@@ -11,7 +11,7 @@ final readonly class AuditLogger
 {
     public function __construct(
         private SecurityMonitor $securityMonitor,
-        private ?LoggerInterface $logger = null
+        private ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -22,7 +22,7 @@ final readonly class AuditLogger
             eventType: 'login_success',
             severity: 'info',
             ipAddress: $ipAddress,
-            userAgent: $userAgent
+            userAgent: $userAgent,
         );
 
         $this->logger?->info("User {$userId} logged in successfully", [
@@ -47,7 +47,7 @@ final readonly class AuditLogger
             userId: $userId,
             eventType: 'password_changed',
             severity: 'warning',
-            ipAddress: $ipAddress
+            ipAddress: $ipAddress,
         );
 
         $this->logger?->warning("User {$userId} changed password", ['ip' => $ipAddress]);
@@ -61,7 +61,7 @@ final readonly class AuditLogger
             userId: $userId,
             eventType: 'account_locked',
             severity: 'critical',
-            details: ['reason' => $reason]
+            details: ['reason' => $reason],
         );
 
         $this->logger?->critical("User {$userId} account locked: {$reason}");
@@ -76,7 +76,7 @@ final readonly class AuditLogger
             eventType: 'suspicious_activity',
             severity: 'warning',
             ipAddress: $ipAddress,
-            details: ['activity_type' => $activityType]
+            details: ['activity_type' => $activityType],
         );
 
         $this->logger?->warning("Suspicious activity detected for user {$userId}: {$activityType}", [

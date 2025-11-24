@@ -32,8 +32,8 @@ final class PasskeyProvider
     /**
      * Generate registration options for creating a new passkey.
      *
-     * @param User $user
      * @return array<string, mixed> WebAuthn registration options
+     *
      * @throws \Exception
      */
     public function generateRegistrationOptions(User $user): array
@@ -68,9 +68,9 @@ final class PasskeyProvider
     /**
      * Verify and store a new passkey registration.
      *
-     * @param User $user
      * @param array<string, mixed> $credential The credential from the client
      * @param string $challenge The challenge that was sent
+     *
      * @return bool True if registration successful
      */
     public function verifyRegistration(User $user, array $credential, string $challenge): bool
@@ -94,7 +94,7 @@ final class PasskeyProvider
                 'counter' => 0,
                 'transports' => $credential['transports'] ?? [],
                 'created_at' => date('Y-m-d H:i:s'),
-            ]
+            ],
         );
     }
 
@@ -102,7 +102,9 @@ final class PasskeyProvider
      * Generate authentication options for signing in with a passkey.
      *
      * @param string|null $userId Optional user ID to limit credentials
+     *
      * @return array<string, mixed> WebAuthn authentication options
+     *
      * @throws \Exception
      */
     public function generateAuthenticationOptions(?string $userId = null): array
@@ -125,7 +127,7 @@ final class PasskeyProvider
                     'id' => $cred['credential_id'],
                     'transports' => $cred['metadata']['transports'] ?? [],
                 ],
-                $credentials
+                $credentials,
             );
         }
 
@@ -139,7 +141,9 @@ final class PasskeyProvider
      * @param string $challenge The challenge that was sent
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
+     *
      * @return array{user: User, session: Session}
+     *
      * @throws InvalidCredentialsException
      * @throws \Exception
      */
@@ -147,7 +151,7 @@ final class PasskeyProvider
         array $assertion,
         string $challenge,
         string $ipAddress,
-        string $userAgent
+        string $userAgent,
     ): array {
         $credentialId = $assertion['id'] ?? '';
 
@@ -189,9 +193,6 @@ final class PasskeyProvider
 
     /**
      * Delete a passkey credential.
-     *
-     * @param string $credentialId
-     * @return bool
      */
     public function deleteCredential(string $credentialId): bool
     {
@@ -201,7 +202,6 @@ final class PasskeyProvider
     /**
      * Get all passkeys for a user.
      *
-     * @param string $userId
      * @return array<array<string, mixed>>
      */
     public function getUserCredentials(string $userId): array

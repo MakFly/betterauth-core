@@ -41,7 +41,7 @@ final class GitHubProvider extends AbstractOAuthProvider
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
             ],
-            ['Accept' => 'application/json']
+            ['Accept' => 'application/json'],
         );
 
         if (!isset($response['access_token'])) {
@@ -60,7 +60,7 @@ final class GitHubProvider extends AbstractOAuthProvider
             [
                 'Authorization' => "Bearer $accessToken",
                 'Accept' => 'application/json',
-            ]
+            ],
         );
 
         // GitHub doesn't return email in user endpoint by default, need to fetch separately
@@ -78,9 +78,6 @@ final class GitHubProvider extends AbstractOAuthProvider
 
     /**
      * Get user's primary email from GitHub.
-     *
-     * @param string $accessToken
-     * @return string
      */
     private function getUserEmail(string $accessToken): string
     {
@@ -91,7 +88,7 @@ final class GitHubProvider extends AbstractOAuthProvider
             [
                 'Authorization' => "Bearer $accessToken",
                 'Accept' => 'application/json',
-            ]
+            ],
         );
 
         foreach ($emails as $email) {

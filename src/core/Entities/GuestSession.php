@@ -13,7 +13,7 @@ final readonly class GuestSession
         public ?string $ipAddress,
         public string $createdAt,
         public string $expiresAt,
-        public ?array $metadata = null
+        public ?array $metadata = null,
     ) {
     }
 
@@ -26,7 +26,7 @@ final readonly class GuestSession
             ipAddress: $data['ip_address'] ?? null,
             createdAt: $data['created_at'],
             expiresAt: $data['expires_at'],
-            metadata: $data['metadata'] ?? null
+            metadata: $data['metadata'] ?? null,
         );
     }
 

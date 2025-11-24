@@ -7,7 +7,6 @@ namespace BetterAuth\Providers\MagicLinkProvider;
 use BetterAuth\Core\Config\AuthConfig;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
-use BetterAuth\Core\Exceptions\InvalidTokenException;
 use BetterAuth\Core\Exceptions\RateLimitException;
 use BetterAuth\Core\Interfaces\EmailSenderInterface;
 use BetterAuth\Core\Interfaces\MagicLinkStorageInterface;
@@ -49,7 +48,9 @@ final class MagicLinkProvider
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      * @param string|null $callbackUrl Optional callback URL (magic link will be appended)
+     *
      * @return array{success: bool, expiresIn: int} Result with expiration time
+     *
      * @throws RateLimitException
      * @throws \Exception
      */
@@ -110,6 +111,7 @@ final class MagicLinkProvider
                 'ip_address' => $ipAddress,
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -120,7 +122,9 @@ final class MagicLinkProvider
      * @param string $token The magic link token
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
-     * @return array{success: bool, error?: string, access_token?: string, refresh_token?: string, expires_in?: int, user?: array} Result of verification
+     *
+     * @return array{success: bool, error?: string, access_token?: string, refresh_token?: string, expires_in?: int, user?: User} Result of verification
+     *
      * @throws \Exception
      */
     public function verifyMagicLink(string $token, string $ipAddress, string $userAgent): array
@@ -140,6 +144,7 @@ final class MagicLinkProvider
                     'ip_address' => $ipAddress,
                     'found' => $magicLinkToken !== null,
                 ]);
+
                 return ['success' => false, 'error' => 'Invalid or expired magic link'];
             }
 
@@ -239,6 +244,7 @@ final class MagicLinkProvider
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }

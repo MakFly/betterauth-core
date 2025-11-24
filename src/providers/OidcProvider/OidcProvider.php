@@ -88,7 +88,7 @@ final class OidcProvider
         $this->codeRepository->create([
             'code' => $code,
             'clientId' => $clientId,
-            'userId' => $authenticatedUser->id,
+            'userId' => $authenticatedUser->getId(),
             'redirectUri' => $redirectUri,
             'scopes' => $scopes,
             'expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
@@ -121,7 +121,7 @@ final class OidcProvider
                 $redirectUri,
                 $clientId,
                 $clientSecret,
-                $codeVerifier
+                $codeVerifier,
             );
         }
 
@@ -158,13 +158,13 @@ final class OidcProvider
         ];
 
         if (in_array('profile', $scopes, true)) {
-            $userinfo['name'] = $user->name;
-            $userinfo['picture'] = $user->avatar;
+            $userinfo['name'] = $user->getName();
+            $userinfo['picture'] = $user->getAvatar();
         }
 
         if (in_array('email', $scopes, true)) {
             $userinfo['email'] = $user->getEmail();
-            $userinfo['email_verified'] = $user->emailVerified;
+            $userinfo['email_verified'] = $user->isEmailVerified();
         }
 
         return $userinfo;
@@ -273,7 +273,7 @@ final class OidcProvider
         }
 
         // Get user
-        $user = $this->userRepository->findById($refreshToken->userId);
+        $user = $this->userRepository->findById($refreshToken->getUserId());
         if ($user === null) {
             throw new InvalidCredentialsException('User not found');
         }
@@ -299,9 +299,9 @@ final class OidcProvider
                 'type' => 'access_token',
                 'scope' => $scopes,
                 'email' => $user->getEmail(),
-                'name' => $user->name,
+                'name' => $user->getName(),
             ],
-            $this->accessTokenLifetime
+            $this->accessTokenLifetime,
         );
 
         // Generate ID token (OIDC)
@@ -313,11 +313,11 @@ final class OidcProvider
                 'iat' => time(),
                 'exp' => time() + $this->accessTokenLifetime,
                 'email' => $user->getEmail(),
-                'email_verified' => $user->emailVerified,
-                'name' => $user->name,
-                'picture' => $user->avatar,
+                'email_verified' => $user->isEmailVerified(),
+                'name' => $user->getName(),
+                'picture' => $user->getAvatar(),
             ],
-            $this->accessTokenLifetime
+            $this->accessTokenLifetime,
         );
 
         $response = [

@@ -44,7 +44,9 @@ final class SessionAuthManager
      * @param string $email The user's email
      * @param string $password The user's password
      * @param array<string, mixed> $additionalData Additional user data
+     *
      * @return User The created user
+     *
      * @throws \Exception
      */
     public function signUp(string $email, string $password, array $additionalData = []): User
@@ -55,6 +57,7 @@ final class SessionAuthManager
         $existingUser = $this->userRepository->findByEmail($email);
         if ($existingUser !== null) {
             $this->logger->warning('Sign up failed: User already exists', ['email' => $email]);
+
             throw new \InvalidArgumentException('User with this email already exists');
         }
 
@@ -91,6 +94,7 @@ final class SessionAuthManager
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -102,7 +106,9 @@ final class SessionAuthManager
      * @param string $password The user's password
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
+     *
      * @return array{user: User, session: Session} The user and session
+     *
      * @throws InvalidCredentialsException
      * @throws RateLimitException
      * @throws \Exception
@@ -187,6 +193,7 @@ final class SessionAuthManager
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             throw $e;
         }
     }
@@ -195,6 +202,7 @@ final class SessionAuthManager
      * Sign out a user by deleting their session.
      *
      * @param string $sessionToken The session token
+     *
      * @return bool True if signed out, false otherwise
      */
     public function signOut(string $sessionToken): bool
@@ -222,6 +230,7 @@ final class SessionAuthManager
      * Get the current user from a session token.
      *
      * @param string $sessionToken The session token
+     *
      * @return User|null The user or null if not found
      */
     public function getCurrentUser(string $sessionToken): ?User
@@ -244,6 +253,7 @@ final class SessionAuthManager
                 'session_token' => substr($sessionToken, 0, 10) . '...',
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -252,6 +262,7 @@ final class SessionAuthManager
      * Verify a user's email.
      *
      * @param string $userId The user ID
+     *
      * @return bool True if verified, false otherwise
      */
     public function verifyEmail(string $userId): bool
@@ -274,7 +285,9 @@ final class SessionAuthManager
      *
      * @param string $userId The user ID
      * @param string $newPassword The new password
+     *
      * @return User The updated user
+     *
      * @throws UserNotFoundException
      */
     public function updatePassword(string $userId, string $newPassword): User
@@ -285,6 +298,7 @@ final class SessionAuthManager
 
         if ($user === null) {
             $this->logger->error('Password update failed: User not found', ['user_id' => $userId]);
+
             throw new UserNotFoundException();
         }
 
@@ -301,6 +315,7 @@ final class SessionAuthManager
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -309,6 +324,7 @@ final class SessionAuthManager
      * Validate a session and refresh it if needed.
      *
      * @param string $sessionToken The session token
+     *
      * @return Session The validated/refreshed session
      */
     public function validateSession(string $sessionToken): Session
@@ -320,6 +336,7 @@ final class SessionAuthManager
      * Get all sessions for a user.
      *
      * @param string $userId The user ID
+     *
      * @return Session[] Array of sessions
      */
     public function getUserSessions(string $userId): array
@@ -341,6 +358,7 @@ final class SessionAuthManager
      *
      * @param string $userId The user ID
      * @param string $sessionId The session token to revoke
+     *
      * @return bool True if revoked, false otherwise
      */
     public function revokeSession(string $userId, string $sessionId): bool
@@ -359,6 +377,7 @@ final class SessionAuthManager
                     'session_user_id' => $session->getUserId(),
                     'session_token' => substr($sessionId, 0, 10) . '...',
                 ]);
+
                 throw new \InvalidArgumentException('Session does not belong to user');
             }
 
@@ -376,6 +395,7 @@ final class SessionAuthManager
                 'session_token' => substr($sessionId, 0, 10) . '...',
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }

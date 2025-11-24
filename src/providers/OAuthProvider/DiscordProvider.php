@@ -42,7 +42,7 @@ final class DiscordProvider extends AbstractOAuthProvider
                 'code' => $code,
                 'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
-            ]
+            ],
         );
 
         if (!isset($response['access_token'])) {
@@ -58,7 +58,7 @@ final class DiscordProvider extends AbstractOAuthProvider
             $this->getUserInfoEndpoint(),
             'GET',
             [],
-            ['Authorization' => "Bearer $accessToken"]
+            ['Authorization' => "Bearer $accessToken"],
         );
 
         // Discord user avatar URL construction
@@ -67,7 +67,7 @@ final class DiscordProvider extends AbstractOAuthProvider
             $avatar = sprintf(
                 'https://cdn.discordapp.com/avatars/%s/%s.png',
                 $response['id'],
-                $response['avatar']
+                $response['avatar'],
             );
         }
 

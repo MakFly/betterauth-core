@@ -13,7 +13,7 @@ use DateTimeImmutable;
 final readonly class AccountLinkProvider
 {
     public function __construct(
-        private AccountLinkRepositoryInterface $accountLinkRepository
+        private AccountLinkRepositoryInterface $accountLinkRepository,
     ) {
     }
 
@@ -22,7 +22,7 @@ final readonly class AccountLinkProvider
         string $provider,
         string $providerId,
         ?string $providerEmail = null,
-        ?array $metadata = null
+        ?array $metadata = null,
     ): AccountLink {
         if ($this->accountLinkRepository->isLinked($user->getId(), $provider)) {
             throw new \RuntimeException("Provider '$provider' is already linked to this user");

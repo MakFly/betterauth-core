@@ -53,10 +53,6 @@ final class AuthManager
     /**
      * Sign in a user - delegates to appropriate manager based on mode.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $ipAddress
-     * @param string $userAgent
      * @return array Session mode returns {user, session}, API mode returns {user, access_token, refresh_token}
      */
     public function signIn(string $email, string $password, string $ipAddress, string $userAgent): array
@@ -243,6 +239,7 @@ final class AuthManager
      * @param string $email The user's email
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
+     *
      * @return array Authentication result (tokens or session depending on mode)
      */
     public function completeTwoFactorLogin(string $email, string $ipAddress, string $userAgent): array
@@ -262,7 +259,7 @@ final class AuthManager
             return [
                 'user' => $user,
                 'session' => $session,
-                'sessionToken' => $session->sessionToken,
+                'sessionToken' => $session->getToken(),
             ];
         }
 

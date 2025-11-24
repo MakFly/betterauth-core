@@ -37,7 +37,13 @@ class PdoMagicLinkStorage implements MagicLinkStorageInterface
             'created_at' => $createdAt->format('Y-m-d H:i:s'),
         ]);
 
-        return new MagicLinkToken($token, $email, $expiresAt, $createdAt, false);
+        return MagicLinkToken::fromArray([
+            'token' => $token,
+            'email' => $email,
+            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            'created_at' => $createdAt->format('Y-m-d H:i:s'),
+            'used' => false,
+        ]);
     }
 
     public function findByToken(string $token): ?MagicLinkToken
@@ -75,8 +81,6 @@ class PdoMagicLinkStorage implements MagicLinkStorageInterface
 
     /**
      * Create the magic link tokens table.
-     *
-     * @return bool
      */
     public function createTable(): bool
     {

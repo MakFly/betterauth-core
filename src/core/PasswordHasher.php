@@ -24,6 +24,7 @@ final class PasswordHasher
      * Hash a password using Argon2id.
      *
      * @param string $password The password to hash
+     *
      * @return string The hashed password
      */
     public function hash(string $password): string
@@ -40,6 +41,7 @@ final class PasswordHasher
      *
      * @param string $password The password to verify
      * @param string $hash The hash to verify against
+     *
      * @return bool True if password matches, false otherwise
      */
     public function verify(string $password, string $hash): bool
@@ -51,6 +53,7 @@ final class PasswordHasher
      * Check if a hash needs to be rehashed.
      *
      * @param string $hash The hash to check
+     *
      * @return bool True if rehashing is needed, false otherwise
      */
     public function needsRehash(string $hash): bool

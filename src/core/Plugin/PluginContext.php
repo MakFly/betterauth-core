@@ -25,7 +25,7 @@ class PluginContext
     private array $services = [];
 
     public function __construct(
-        private readonly AuthConfig $config
+        private readonly AuthConfig $config,
     ) {
     }
 
@@ -44,7 +44,6 @@ class PluginContext
      *
      * @param string $hookName Name of the hook
      * @param callable $callback Callback to execute (receives event data)
-     * @return void
      */
     public function registerHook(string $hookName, callable $callback): void
     {
@@ -60,7 +59,6 @@ class PluginContext
      *
      * @param string $hookName Name of the hook to execute
      * @param mixed $data Data to pass to callbacks
-     * @return void
      */
     public function executeHook(string $hookName, mixed $data): void
     {
@@ -88,7 +86,6 @@ class PluginContext
      *
      * @param string $name Service name
      * @param mixed $service Service instance
-     * @return void
      */
     public function registerService(string $name, mixed $service): void
     {
@@ -99,6 +96,7 @@ class PluginContext
      * Get a registered service.
      *
      * @param string $name Service name
+     *
      * @return mixed|null Service instance or null if not found
      */
     public function getService(string $name): mixed
@@ -110,6 +108,7 @@ class PluginContext
      * Check if a service is registered.
      *
      * @param string $name Service name
+     *
      * @return bool True if service exists
      */
     public function hasService(string $name): bool
@@ -119,8 +118,6 @@ class PluginContext
 
     /**
      * Get the authentication configuration.
-     *
-     * @return AuthConfig
      */
     public function getConfig(): AuthConfig
     {
@@ -131,7 +128,6 @@ class PluginContext
      * Modify configuration (merge with existing).
      *
      * @param array<string, mixed> $config Configuration to merge
-     * @return void
      */
     public function mergeConfig(array $config): void
     {

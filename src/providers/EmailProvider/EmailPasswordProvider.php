@@ -21,10 +21,8 @@ final class EmailPasswordProvider
     /**
      * Register a new user with email and password.
      *
-     * @param string $email
-     * @param string $password
      * @param array<string, mixed> $additionalData
-     * @return User
+     *
      * @throws \Exception
      */
     public function signUp(string $email, string $password, array $additionalData = []): User
@@ -38,11 +36,8 @@ final class EmailPasswordProvider
     /**
      * Sign in with email and password.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $ipAddress
-     * @param string $userAgent
      * @return array{user: User, session: Session}
+     *
      * @throws \Exception
      */
     public function signIn(string $email, string $password, string $ipAddress, string $userAgent): array
@@ -55,7 +50,6 @@ final class EmailPasswordProvider
     /**
      * Validate email format.
      *
-     * @param string $email
      * @throws \InvalidArgumentException
      */
     private function validateEmail(string $email): void
@@ -68,7 +62,6 @@ final class EmailPasswordProvider
     /**
      * Validate password strength.
      *
-     * @param string $password
      * @throws \InvalidArgumentException
      */
     private function validatePassword(string $password): void

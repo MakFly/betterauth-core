@@ -21,7 +21,7 @@ class PluginRegistry
      * Register a plugin class for auto-instantiation.
      *
      * @param class-string<PluginInterface> $pluginClass Fully qualified plugin class name
-     * @return void
+     *
      * @throws \InvalidArgumentException If class doesn't implement PluginInterface
      */
     public function registerClass(string $pluginClass): void
@@ -32,7 +32,7 @@ class PluginRegistry
 
         if (!is_subclass_of($pluginClass, PluginInterface::class)) {
             throw new \InvalidArgumentException(
-                "Plugin class '$pluginClass' must implement " . PluginInterface::class
+                "Plugin class '$pluginClass' must implement " . PluginInterface::class,
             );
         }
 
@@ -53,6 +53,7 @@ class PluginRegistry
      * Create plugin instances from registered classes.
      *
      * @param array<string, mixed> $constructorArgs Optional constructor arguments
+     *
      * @return array<PluginInterface> Array of plugin instances
      */
     public function createInstances(array $constructorArgs = []): array
@@ -84,7 +85,6 @@ class PluginRegistry
      *
      * @param string $directory Directory to scan
      * @param string $namespace Base namespace for discovered classes
-     * @return void
      */
     public function discoverFromDirectory(string $directory, string $namespace): void
     {
@@ -93,7 +93,7 @@ class PluginRegistry
         }
 
         $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS)
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
         );
 
         foreach ($iterator as $file) {
@@ -106,7 +106,7 @@ class PluginRegistry
             $className = $namespace . '\\' . str_replace(
                 ['/', '.php'],
                 ['\\', ''],
-                $relativePath
+                $relativePath,
             );
 
             // Try to register the class
@@ -123,7 +123,6 @@ class PluginRegistry
      * Register multiple plugin classes at once.
      *
      * @param array<class-string<PluginInterface>> $pluginClasses Array of plugin class names
-     * @return void
      */
     public function registerMany(array $pluginClasses): void
     {
@@ -134,8 +133,6 @@ class PluginRegistry
 
     /**
      * Clear all registered plugin classes.
-     *
-     * @return void
      */
     public function clear(): void
     {

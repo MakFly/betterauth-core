@@ -15,7 +15,7 @@ final readonly class SecurityEvent
         public ?string $userAgent,
         public ?string $location,
         public string $createdAt,
-        public ?array $details = null
+        public ?array $details = null,
     ) {
     }
 
@@ -30,7 +30,7 @@ final readonly class SecurityEvent
             userAgent: $data['user_agent'] ?? null,
             location: $data['location'] ?? null,
             createdAt: $data['created_at'],
-            details: $data['details'] ?? null
+            details: $data['details'] ?? null,
         );
     }
 

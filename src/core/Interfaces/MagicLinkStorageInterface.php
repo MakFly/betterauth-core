@@ -17,6 +17,7 @@ interface MagicLinkStorageInterface
      * @param string $token The token
      * @param string $email The email address
      * @param int $expiresIn Expiration time in seconds
+     *
      * @return MagicLinkToken The stored token
      */
     public function store(string $token, string $email, int $expiresIn): MagicLinkToken;
@@ -25,6 +26,7 @@ interface MagicLinkStorageInterface
      * Find a magic link token by its value.
      *
      * @param string $token The token
+     *
      * @return MagicLinkToken|null The token or null if not found
      */
     public function findByToken(string $token): ?MagicLinkToken;
@@ -33,6 +35,7 @@ interface MagicLinkStorageInterface
      * Mark a token as used.
      *
      * @param string $token The token
+     *
      * @return bool True if marked as used, false otherwise
      */
     public function markAsUsed(string $token): bool;
@@ -41,6 +44,7 @@ interface MagicLinkStorageInterface
      * Delete a token.
      *
      * @param string $token The token
+     *
      * @return bool True if deleted, false otherwise
      */
     public function delete(string $token): bool;

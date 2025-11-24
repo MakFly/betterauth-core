@@ -14,7 +14,7 @@ final readonly class SessionActivity
         public ?string $userAgent,
         public ?string $location,
         public string $createdAt,
-        public ?array $metadata = null
+        public ?array $metadata = null,
     ) {
     }
 
@@ -28,7 +28,7 @@ final readonly class SessionActivity
             userAgent: $data['user_agent'] ?? null,
             location: $data['location'] ?? null,
             createdAt: $data['created_at'],
-            metadata: $data['metadata'] ?? null
+            metadata: $data['metadata'] ?? null,
         );
     }
 

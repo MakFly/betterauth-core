@@ -44,7 +44,6 @@ interface PluginInterface
      * Use the PluginContext to register hooks, modify configuration, and access services.
      *
      * @param PluginContext $context The plugin context with access to services and hooks
-     * @return void
      */
     public function install(PluginContext $context): void;
 

@@ -15,6 +15,7 @@ interface SessionRepositoryInterface
      * Find a session by its token.
      *
      * @param string $token The session token
+     *
      * @return Session|null The session entity or null if not found
      */
     public function findByToken(string $token): ?Session;
@@ -23,6 +24,7 @@ interface SessionRepositoryInterface
      * Find all active sessions for a user.
      *
      * @param string $userId The user ID
+     *
      * @return Session[] Array of active sessions
      */
     public function findByUserId(string $userId): array;
@@ -31,6 +33,7 @@ interface SessionRepositoryInterface
      * Create a new session.
      *
      * @param array<string, mixed> $data Session data
+     *
      * @return Session The created session entity
      */
     public function create(array $data): Session;
@@ -40,6 +43,7 @@ interface SessionRepositoryInterface
      *
      * @param string $token The session token
      * @param array<string, mixed> $data Data to update
+     *
      * @return Session The updated session entity
      */
     public function update(string $token, array $data): Session;
@@ -48,6 +52,7 @@ interface SessionRepositoryInterface
      * Delete a session by its token.
      *
      * @param string $token The session token
+     *
      * @return bool True if deleted, false otherwise
      */
     public function delete(string $token): bool;
@@ -56,6 +61,7 @@ interface SessionRepositoryInterface
      * Delete all sessions for a user.
      *
      * @param string $userId The user ID
+     *
      * @return int Number of sessions deleted
      */
     public function deleteByUserId(string $userId): int;

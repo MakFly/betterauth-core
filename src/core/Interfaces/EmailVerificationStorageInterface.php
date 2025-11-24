@@ -17,6 +17,7 @@ interface EmailVerificationStorageInterface
      * @param string $token The verification token
      * @param string $email The user email
      * @param int $expiresIn Expiration time in seconds
+     *
      * @return EmailVerificationToken The stored token
      */
     public function store(string $token, string $email, int $expiresIn): EmailVerificationToken;
@@ -25,6 +26,7 @@ interface EmailVerificationStorageInterface
      * Find an email verification token by its value.
      *
      * @param string $token The token
+     *
      * @return EmailVerificationToken|null The token or null if not found
      */
     public function findByToken(string $token): ?EmailVerificationToken;
@@ -33,6 +35,7 @@ interface EmailVerificationStorageInterface
      * Mark a token as used.
      *
      * @param string $token The token
+     *
      * @return bool True if marked as used, false otherwise
      */
     public function markAsUsed(string $token): bool;
@@ -41,6 +44,7 @@ interface EmailVerificationStorageInterface
      * Delete a token.
      *
      * @param string $token The token
+     *
      * @return bool True if deleted, false otherwise
      */
     public function delete(string $token): bool;
@@ -49,6 +53,7 @@ interface EmailVerificationStorageInterface
      * Delete all tokens for an email.
      *
      * @param string $email The email address
+     *
      * @return int Number of tokens deleted
      */
     public function deleteByEmail(string $email): int;

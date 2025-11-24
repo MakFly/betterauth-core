@@ -13,7 +13,7 @@ abstract class AuthEvent
 {
     public function __construct(
         public readonly User $user,
-        public readonly array $metadata = []
+        public readonly array $metadata = [],
     ) {
     }
 }
