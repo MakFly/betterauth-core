@@ -99,6 +99,14 @@ class RefreshToken
         return $this;
     }
 
+    /**
+     * Check if the refresh token is valid (not expired and not revoked).
+     */
+    public function isValid(): bool
+    {
+        return !$this->revoked && $this->expiresAt > new DateTimeImmutable();
+    }
+
     public static function fromArray(array $data): self
     {
         $token = new self();

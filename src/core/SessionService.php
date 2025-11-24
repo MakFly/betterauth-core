@@ -10,6 +10,8 @@ use BetterAuth\Core\Exceptions\SessionExpiredException;
 use BetterAuth\Core\Interfaces\SessionRepositoryInterface;
 use BetterAuth\Core\Utils\Crypto;
 use DateTimeImmutable;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Service for managing user sessions.
@@ -18,10 +20,14 @@ use DateTimeImmutable;
  */
 final class SessionService
 {
+    private readonly LoggerInterface $logger;
+
     public function __construct(
         private readonly SessionRepositoryInterface $sessionRepository,
         private readonly int $sessionLifetime = 86400 * 7, // 7 days default
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -40,17 +46,39 @@ final class SessionService
         string $userAgent,
         array $metadata = []
     ): Session {
-        $token = Crypto::randomToken(32);
-        $expiresAt = new DateTimeImmutable("+{$this->sessionLifetime} seconds");
-
-        return $this->sessionRepository->create([
-            'token' => $token,
-            'user_id' => $user->id,
-            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+        $this->logger->info('Creating new session', [
+            'user_id' => $user->getId(),
             'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
-            'metadata' => $metadata,
         ]);
+
+        try {
+            $token = Crypto::randomToken(32);
+            $expiresAt = new DateTimeImmutable("+{$this->sessionLifetime} seconds");
+
+            $session = $this->sessionRepository->create([
+                'token' => $token,
+                'user_id' => $user->getId(),
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+                'metadata' => $metadata,
+            ]);
+
+            $this->logger->info('Session created successfully', [
+                'user_id' => $user->getId(),
+                'session_token' => substr($token, 0, 10) . '...',
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]);
+
+            return $session;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to create session', [
+                'user_id' => $user->getId(),
+                'ip_address' => $ipAddress,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -62,17 +90,35 @@ final class SessionService
      */
     public function validate(string $token): Session
     {
+        $this->logger->debug('Validating session', [
+            'session_token' => substr($token, 0, 10) . '...',
+        ]);
+
         $session = $this->sessionRepository->findByToken($token);
 
         if ($session === null) {
+            $this->logger->warning('Session validation failed: Session not found', [
+                'session_token' => substr($token, 0, 10) . '...',
+            ]);
             throw new SessionExpiredException('Session not found');
         }
 
         if ($session->isExpired()) {
+            $this->logger->warning('Session validation failed: Session expired', [
+                'session_token' => substr($token, 0, 10) . '...',
+                'user_id' => $session->getUserId(),
+                'expired_at' => $session->getExpiresAt()->format('Y-m-d H:i:s'),
+            ]);
+
             $this->sessionRepository->delete($token);
 
             throw new SessionExpiredException();
         }
+
+        $this->logger->debug('Session validated successfully', [
+            'session_token' => substr($token, 0, 10) . '...',
+            'user_id' => $session->getUserId(),
+        ]);
 
         return $session;
     }
@@ -86,13 +132,35 @@ final class SessionService
      */
     public function refresh(string $token): Session
     {
-        $session = $this->validate($token);
-
-        $expiresAt = new DateTimeImmutable("+{$this->sessionLifetime} seconds");
-
-        return $this->sessionRepository->update($token, [
-            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+        $this->logger->debug('Refreshing session', [
+            'session_token' => substr($token, 0, 10) . '...',
         ]);
+
+        try {
+            $session = $this->validate($token);
+
+            $expiresAt = new DateTimeImmutable("+{$this->sessionLifetime} seconds");
+
+            $refreshedSession = $this->sessionRepository->update($token, [
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]);
+
+            $this->logger->info('Session refreshed successfully', [
+                'session_token' => substr($token, 0, 10) . '...',
+                'user_id' => $session->getUserId(),
+                'new_expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]);
+
+            return $refreshedSession;
+        } catch (SessionExpiredException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to refresh session', [
+                'session_token' => substr($token, 0, 10) . '...',
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -103,7 +171,23 @@ final class SessionService
      */
     public function delete(string $token): bool
     {
-        return $this->sessionRepository->delete($token);
+        $this->logger->info('Deleting session', [
+            'session_token' => substr($token, 0, 10) . '...',
+        ]);
+
+        $result = $this->sessionRepository->delete($token);
+
+        if ($result) {
+            $this->logger->info('Session deleted successfully', [
+                'session_token' => substr($token, 0, 10) . '...',
+            ]);
+        } else {
+            $this->logger->warning('Session deletion failed: Session not found', [
+                'session_token' => substr($token, 0, 10) . '...',
+            ]);
+        }
+
+        return $result;
     }
 
     /**
@@ -114,7 +198,16 @@ final class SessionService
      */
     public function deleteAllForUser(string $userId): int
     {
-        return $this->sessionRepository->deleteByUserId($userId);
+        $this->logger->info('Deleting all sessions for user', ['user_id' => $userId]);
+
+        $deletedCount = $this->sessionRepository->deleteByUserId($userId);
+
+        $this->logger->info('All user sessions deleted', [
+            'user_id' => $userId,
+            'deleted_count' => $deletedCount,
+        ]);
+
+        return $deletedCount;
     }
 
     /**
@@ -125,7 +218,16 @@ final class SessionService
      */
     public function getAllForUser(string $userId): array
     {
-        return $this->sessionRepository->findByUserId($userId);
+        $this->logger->debug('Getting all sessions for user', ['user_id' => $userId]);
+
+        $sessions = $this->sessionRepository->findByUserId($userId);
+
+        $this->logger->debug('Retrieved sessions for user', [
+            'user_id' => $userId,
+            'session_count' => count($sessions),
+        ]);
+
+        return $sessions;
     }
 
     /**
@@ -135,6 +237,14 @@ final class SessionService
      */
     public function cleanupExpired(): int
     {
-        return $this->sessionRepository->deleteExpired();
+        $this->logger->info('Cleaning up expired sessions');
+
+        $deletedCount = $this->sessionRepository->deleteExpired();
+
+        $this->logger->info('Expired sessions cleaned up', [
+            'deleted_count' => $deletedCount,
+        ]);
+
+        return $deletedCount;
     }
 }

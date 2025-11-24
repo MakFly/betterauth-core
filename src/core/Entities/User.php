@@ -198,6 +198,14 @@ class User
         ];
     }
 
+    /**
+     * Check if user has a password (for Magic Link users who might not have one)
+     */
+    public function hasPassword(): bool
+    {
+        return $this->passwordHash !== null && $this->passwordHash !== '';
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {

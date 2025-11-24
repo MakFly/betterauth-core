@@ -13,6 +13,8 @@ use BetterAuth\Core\Interfaces\TokenSignerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\Utils\Crypto;
 use DateTimeImmutable;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Token-based authentication manager for stateless APIs and microservices.
@@ -26,13 +28,17 @@ use DateTimeImmutable;
  */
 final class TokenAuthManager
 {
+    private readonly LoggerInterface $logger;
+
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly RefreshTokenRepositoryInterface $refreshTokenRepository,
         private readonly TokenSignerInterface $tokenService,
         private readonly PasswordHasher $passwordHasher,
         private readonly AuthConfig $config,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -40,21 +46,47 @@ final class TokenAuthManager
      */
     public function signIn(string $email, string $password): array
     {
+        $this->logger->info('Token sign in attempt', ['email' => $email]);
+
         $user = $this->userRepository->findByEmail($email);
 
         if ($user === null || !$user->hasPassword()) {
+            $this->logger->warning('Token sign in failed: Invalid credentials', [
+                'email' => $email,
+                'reason' => $user === null ? 'user_not_found' : 'no_password',
+            ]);
             throw new InvalidCredentialsException();
         }
 
         // After hasPassword() check, passwordHash is guaranteed to be non-null
-        $passwordHash = $user->passwordHash;
+        $passwordHash = $user->getPasswordHash();
         assert($passwordHash !== null);
 
         if (!$this->passwordHasher->verify($password, $passwordHash)) {
+            $this->logger->warning('Token sign in failed: Invalid password', [
+                'email' => $email,
+                'user_id' => $user->getId(),
+            ]);
             throw new InvalidCredentialsException();
         }
 
-        return $this->createTokenPair($user);
+        try {
+            $tokens = $this->createTokenPair($user);
+
+            $this->logger->info('Token sign in successful', [
+                'email' => $email,
+                'user_id' => $user->getId(),
+            ]);
+
+            return $tokens;
+        } catch (\Exception $e) {
+            $this->logger->error('Token sign in failed with exception', [
+                'email' => $email,
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -62,23 +94,52 @@ final class TokenAuthManager
      */
     public function refresh(string $refreshTokenValue): array
     {
+        $this->logger->debug('Token refresh attempt', [
+            'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
+        ]);
+
         $refreshToken = $this->refreshTokenRepository->findByToken($refreshTokenValue);
 
         if ($refreshToken === null || !$refreshToken->isValid()) {
+            $this->logger->warning('Token refresh failed: Invalid or expired refresh token', [
+                'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
+                'found' => $refreshToken !== null,
+                'valid' => $refreshToken?->isValid() ?? false,
+            ]);
             throw new InvalidTokenException('Invalid or expired refresh token');
         }
 
-        $user = $this->userRepository->findById($refreshToken->userId);
+        $user = $this->userRepository->findById($refreshToken->getUserId());
         if ($user === null) {
+            $this->logger->error('Token refresh failed: User not found', [
+                'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
+                'user_id' => $refreshToken->getUserId(),
+            ]);
             throw new InvalidTokenException('User not found');
         }
 
-        // Revoke old refresh token
-        $newRefreshTokenValue = Crypto::randomToken(32);
-        $this->refreshTokenRepository->revoke($refreshTokenValue, $newRefreshTokenValue);
+        try {
+            // Revoke old refresh token
+            $newRefreshTokenValue = Crypto::randomToken(32);
+            $this->refreshTokenRepository->revoke($refreshTokenValue, $newRefreshTokenValue);
 
-        // Create new token pair
-        return $this->createTokenPair($user, $newRefreshTokenValue);
+            // Create new token pair
+            $tokens = $this->createTokenPair($user, $newRefreshTokenValue);
+
+            $this->logger->info('Token refresh successful', [
+                'user_id' => $user->getId(),
+                'old_token' => substr($refreshTokenValue, 0, 10) . '...',
+            ]);
+
+            return $tokens;
+        } catch (\Exception $e) {
+            $this->logger->error('Token refresh failed with exception', [
+                'user_id' => $user->getId(),
+                'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -86,18 +147,34 @@ final class TokenAuthManager
      */
     public function verify(string $accessToken): User
     {
-        $payload = $this->tokenService->verify($accessToken);
+        try {
+            $payload = $this->tokenService->verify($accessToken);
 
-        if ($payload === null || !isset($payload['sub'])) {
-            throw new InvalidTokenException();
+            if ($payload === null || !isset($payload['sub'])) {
+                $this->logger->debug('Token verification failed: Invalid payload', [
+                    'token' => substr($accessToken, 0, 20) . '...',
+                ]);
+                throw new InvalidTokenException();
+            }
+
+            $user = $this->userRepository->findById($payload['sub']);
+            if ($user === null) {
+                $this->logger->warning('Token verification failed: User not found', [
+                    'user_id' => $payload['sub'],
+                ]);
+                throw new InvalidTokenException('User not found');
+            }
+
+            return $user;
+        } catch (InvalidTokenException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->logger->error('Token verification failed with exception', [
+                'token' => substr($accessToken, 0, 20) . '...',
+                'error' => $e->getMessage(),
+            ]);
+            throw new InvalidTokenException('Token verification failed');
         }
-
-        $user = $this->userRepository->findById($payload['sub']);
-        if ($user === null) {
-            throw new InvalidTokenException('User not found');
-        }
-
-        return $user;
     }
 
     /**
@@ -105,7 +182,16 @@ final class TokenAuthManager
      */
     public function revokeAllTokens(string $userId): int
     {
-        return $this->refreshTokenRepository->revokeAllForUser($userId);
+        $this->logger->info('Revoking all tokens for user', ['user_id' => $userId]);
+
+        $revokedCount = $this->refreshTokenRepository->revokeAllForUser($userId);
+
+        $this->logger->info('All tokens revoked', [
+            'user_id' => $userId,
+            'revoked_count' => $revokedCount,
+        ]);
+
+        return $revokedCount;
     }
 
     /**
@@ -114,7 +200,26 @@ final class TokenAuthManager
      */
     public function createTokensForUser(User $user): array
     {
-        return $this->createTokenPair($user);
+        $this->logger->info('Creating tokens for user without password', [
+            'user_id' => $user->getId(),
+            'email' => $user->getEmail(),
+        ]);
+
+        try {
+            $tokens = $this->createTokenPair($user);
+
+            $this->logger->info('Tokens created successfully for user', [
+                'user_id' => $user->getId(),
+            ]);
+
+            return $tokens;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to create tokens for user', [
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -122,38 +227,54 @@ final class TokenAuthManager
      */
     private function createTokenPair(User $user, ?string $refreshTokenValue = null): array
     {
-        // Create access token
-        $accessToken = $this->tokenService->sign(
-            [
-                'sub' => $user->id,
-                'type' => 'access',
-                'data' => [
-                    'email' => $user->email,
-                    'name' => $user->name,
+        $this->logger->debug('Creating token pair', ['user_id' => $user->getId()]);
+
+        try {
+            // Create access token
+            $accessToken = $this->tokenService->sign(
+                [
+                    'sub' => $user->getId(),
+                    'type' => 'access',
+                    'data' => [
+                        'email' => $user->getEmail(),
+                        'name' => $user->getName(),
+                    ],
                 ],
-            ],
-            $this->config->tokenLifetime
-        );
+                $this->config->tokenLifetime
+            );
 
-        // Create refresh token
-        if ($refreshTokenValue === null) {
-            $refreshTokenValue = Crypto::randomToken(32);
+            // Create refresh token
+            if ($refreshTokenValue === null) {
+                $refreshTokenValue = Crypto::randomToken(32);
+            }
+
+            $expiresAt = new DateTimeImmutable("+{$this->config->refreshTokenLifetime} seconds");
+
+            $refreshToken = $this->refreshTokenRepository->create([
+                'token' => $refreshTokenValue,
+                'userId' => $user->getId(),
+                'expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
+            ]);
+
+            $this->logger->debug('Token pair created successfully', [
+                'user_id' => $user->getId(),
+                'expires_in' => $this->config->tokenLifetime,
+            ]);
+
+            return [
+                'user' => $user,
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken->getToken(),
+                'token_type' => 'Bearer',
+                'expires_in' => $this->config->tokenLifetime,
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to create token pair', [
+                'user_id' => $user->getId(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-
-        $expiresAt = new DateTimeImmutable("+{$this->config->refreshTokenLifetime} seconds");
-
-        $refreshToken = $this->refreshTokenRepository->create([
-            'token' => $refreshTokenValue,
-            'userId' => $user->id,
-            'expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
-        ]);
-
-        return [
-            'user' => $user,
-            'access_token' => $accessToken,
-            'refresh_token' => $refreshToken->token,
-            'token_type' => 'Bearer',
-            'expires_in' => $this->config->tokenLifetime,
-        ];
     }
 }

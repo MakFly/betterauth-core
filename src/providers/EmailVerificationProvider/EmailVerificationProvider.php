@@ -91,7 +91,7 @@ final class EmailVerificationProvider
             return ['success' => false, 'error' => 'User not found'];
         }
 
-        $this->userRepository->verifyEmail($user->id);
+        $this->userRepository->verifyEmail($user->getId());
         $this->verificationStorage->markAsUsed($token);
         $this->verificationStorage->deleteByEmail($verificationToken->email);
         $this->rateLimiter?->clear("email_verification:{$verificationToken->email}");

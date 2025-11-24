@@ -47,9 +47,9 @@ final class PasskeyProvider
                 'id' => $this->rpId,
             ],
             'user' => [
-                'id' => $user->id,
-                'name' => $user->email,
-                'displayName' => $user->name ?? $user->email,
+                'id' => $user->getId(),
+                'name' => $user->getEmail(),
+                'displayName' => $user->getName() ?? $user->getEmail(),
             ],
             'pubKeyCredParams' => [
                 ['type' => 'public-key', 'alg' => -7],  // ES256
@@ -87,7 +87,7 @@ final class PasskeyProvider
 
         // Store the credential
         return $this->passkeyStorage->store(
-            userId: $user->id,
+            userId: $user->getId(),
             credentialId: $credentialId,
             publicKey: $publicKey,
             metadata: [

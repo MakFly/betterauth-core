@@ -24,21 +24,21 @@ final readonly class AccountLinkProvider
         ?string $providerEmail = null,
         ?array $metadata = null
     ): AccountLink {
-        if ($this->accountLinkRepository->isLinked($user->id, $provider)) {
+        if ($this->accountLinkRepository->isLinked($user->getId(), $provider)) {
             throw new \RuntimeException("Provider '$provider' is already linked to this user");
         }
 
         $existingLink = $this->accountLinkRepository->findByProvider($provider, $providerId);
-        if ($existingLink !== null && $existingLink->userId !== $user->id) {
+        if ($existingLink !== null && $existingLink->userId !== $user->getId()) {
             throw new \RuntimeException('This provider account is already linked to another user');
         }
 
         $id = $this->accountLinkRepository->generateId() ?? IdGenerator::ulid();
-        $isPrimary = $this->accountLinkRepository->countForUser($user->id) === 0;
+        $isPrimary = $this->accountLinkRepository->countForUser($user->getId()) === 0;
 
         return $this->accountLinkRepository->create([
             'id' => $id,
-            'user_id' => $user->id,
+            'user_id' => $user->getId(),
             'provider' => $provider,
             'provider_id' => $providerId,
             'provider_email' => $providerEmail,

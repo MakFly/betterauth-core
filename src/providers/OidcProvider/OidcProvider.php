@@ -154,7 +154,7 @@ final class OidcProvider
 
         // Build response based on scopes
         $userinfo = [
-            'sub' => $user->id,
+            'sub' => $user->getId(),
         ];
 
         if (in_array('profile', $scopes, true)) {
@@ -163,7 +163,7 @@ final class OidcProvider
         }
 
         if (in_array('email', $scopes, true)) {
-            $userinfo['email'] = $user->email;
+            $userinfo['email'] = $user->getEmail();
             $userinfo['email_verified'] = $user->emailVerified;
         }
 
@@ -293,12 +293,12 @@ final class OidcProvider
         // Generate access token
         $accessToken = $this->tokenService->sign(
             [
-                'sub' => $user->id,
+                'sub' => $user->getId(),
                 'iss' => $this->issuer,
                 'aud' => $clientId,
                 'type' => 'access_token',
                 'scope' => $scopes,
-                'email' => $user->email,
+                'email' => $user->getEmail(),
                 'name' => $user->name,
             ],
             $this->accessTokenLifetime
@@ -307,12 +307,12 @@ final class OidcProvider
         // Generate ID token (OIDC)
         $idToken = $this->tokenService->sign(
             [
-                'sub' => $user->id,
+                'sub' => $user->getId(),
                 'iss' => $this->issuer,
                 'aud' => $clientId,
                 'iat' => time(),
                 'exp' => time() + $this->accessTokenLifetime,
-                'email' => $user->email,
+                'email' => $user->getEmail(),
                 'email_verified' => $user->emailVerified,
                 'name' => $user->name,
                 'picture' => $user->avatar,
@@ -334,7 +334,7 @@ final class OidcProvider
 
             $this->refreshTokenRepository->create([
                 'token' => $refreshTokenValue,
-                'userId' => $user->id,
+                'userId' => $user->getId(),
                 'expiresAt' => $expiresAt->format('Y-m-d H:i:s'),
             ]);
 

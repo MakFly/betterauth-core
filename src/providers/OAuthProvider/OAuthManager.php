@@ -130,7 +130,7 @@ final class OAuthManager
                     'connected_at' => date('Y-m-d H:i:s'),
                 ];
 
-                $user = $this->userRepository->update($user->id, ['metadata' => $metadata]);
+                $user = $this->userRepository->update($user->getId(), ['metadata' => $metadata]);
             }
         }
 

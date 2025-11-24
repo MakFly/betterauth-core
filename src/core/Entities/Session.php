@@ -188,6 +188,14 @@ class Session
         ];
     }
 
+    /**
+     * Check if the session has expired
+     */
+    public function isExpired(): bool
+    {
+        return $this->expiresAt < new DateTimeImmutable();
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {

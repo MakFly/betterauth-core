@@ -149,7 +149,7 @@ final class PasswordResetProvider
         }
 
         // Update password
-        $this->authManager->updatePassword($user->id, $newPassword);
+        $this->authManager->updatePassword($user->getId(), $newPassword);
 
         // Mark token as used
         $this->passwordResetStorage->markAsUsed($token);

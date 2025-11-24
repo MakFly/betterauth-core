@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\MagicLinkProvider;
 
+use BetterAuth\Core\Config\AuthConfig;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Exceptions\InvalidTokenException;
@@ -13,23 +14,32 @@ use BetterAuth\Core\Interfaces\MagicLinkStorageInterface;
 use BetterAuth\Core\Interfaces\RateLimiterInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\SessionService;
+use BetterAuth\Core\TokenAuthManager;
 use BetterAuth\Core\Utils\Crypto;
 use BetterAuth\Core\Utils\IdGenerator;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Magic link (passwordless) authentication provider.
+ * Supports both session-based (monolith) and token-based (API) authentication modes.
  */
 final class MagicLinkProvider
 {
     private const TOKEN_EXPIRY = 600; // 10 minutes
+    private readonly LoggerInterface $logger;
 
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly MagicLinkStorageInterface $magicLinkStorage,
         private readonly EmailSenderInterface $emailSender,
         private readonly SessionService $sessionService,
+        private readonly AuthConfig $authConfig,
+        private readonly ?TokenAuthManager $tokenAuthManager = null,
         private readonly ?RateLimiterInterface $rateLimiter = null,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -45,32 +55,63 @@ final class MagicLinkProvider
      */
     public function sendMagicLink(string $email, string $ipAddress, string $userAgent, ?string $callbackUrl = null): array
     {
+        $this->logger->info('Magic link send attempt', [
+            'email' => $email,
+            'ip_address' => $ipAddress,
+        ]);
+
         // Rate limiting
         $rateLimitKey = "magic_link:$email";
         if ($this->rateLimiter?->tooManyAttempts($rateLimitKey, 3, 300)) {
             $retryAfter = $this->rateLimiter->availableIn($rateLimitKey);
+
+            $this->logger->warning('Magic link send rate limited', [
+                'email' => $email,
+                'ip_address' => $ipAddress,
+                'retry_after' => $retryAfter,
+            ]);
 
             throw new RateLimitException(retryAfter: $retryAfter);
         }
 
         $this->rateLimiter?->hit($rateLimitKey, 300);
 
-        // Generate token
-        $token = Crypto::randomToken(32);
+        try {
+            // Generate token
+            $token = Crypto::randomToken(32);
 
-        // Store token
-        $this->magicLinkStorage->store($token, $email, self::TOKEN_EXPIRY);
+            // Store token
+            $this->magicLinkStorage->store($token, $email, self::TOKEN_EXPIRY);
 
-        if ($callbackUrl !== null) {
-            // Build magic link URL
-            $separator = str_contains($callbackUrl, '?') ? '&' : '?';
-            $magicLink = $callbackUrl . $separator . 'token=' . urlencode($token);
+            if ($callbackUrl !== null) {
+                // Build magic link URL
+                $separator = str_contains($callbackUrl, '?') ? '&' : '?';
+                $magicLink = $callbackUrl . $separator . 'token=' . urlencode($token);
 
-            // Send email
-            $this->emailSender->sendMagicLink($email, $magicLink);
+                // Send email
+                $this->emailSender->sendMagicLink($email, $magicLink);
+
+                $this->logger->info('Magic link sent successfully', [
+                    'email' => $email,
+                    'callback_url' => $callbackUrl,
+                    'expires_in' => self::TOKEN_EXPIRY,
+                ]);
+            } else {
+                $this->logger->info('Magic link created (no callback URL)', [
+                    'email' => $email,
+                    'expires_in' => self::TOKEN_EXPIRY,
+                ]);
+            }
+
+            return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send magic link', [
+                'email' => $email,
+                'ip_address' => $ipAddress,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
         }
-
-        return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
     }
 
     /**
@@ -84,53 +125,121 @@ final class MagicLinkProvider
      */
     public function verifyMagicLink(string $token, string $ipAddress, string $userAgent): array
     {
-        // Find token
-        $magicLinkToken = $this->magicLinkStorage->findByToken($token);
+        $this->logger->info('Magic link verification attempt', [
+            'token' => substr($token, 0, 10) . '...',
+            'ip_address' => $ipAddress,
+        ]);
 
-        if ($magicLinkToken === null || !$magicLinkToken->isValid()) {
-            return ['success' => false, 'error' => 'Invalid or expired magic link'];
-        }
+        try {
+            // Find token
+            $magicLinkToken = $this->magicLinkStorage->findByToken($token);
 
-        // Mark token as used
-        $this->magicLinkStorage->markAsUsed($token);
+            if ($magicLinkToken === null || !$magicLinkToken->isValid()) {
+                $this->logger->warning('Magic link verification failed: Invalid or expired token', [
+                    'token' => substr($token, 0, 10) . '...',
+                    'ip_address' => $ipAddress,
+                    'found' => $magicLinkToken !== null,
+                ]);
+                return ['success' => false, 'error' => 'Invalid or expired magic link'];
+            }
 
-        // Find or create user
-        $user = $this->userRepository->findByEmail($magicLinkToken->email);
+            $email = $magicLinkToken->getEmail();
 
-        if ($user === null) {
-            // Auto-create user for magic link
-            $user = $this->userRepository->create([
-                'id' => IdGenerator::ulid(),
-                'email' => $magicLinkToken->email,
-                'password_hash' => null,
-                'email_verified' => true, // Magic link confirms email ownership
-                'email_verified_at' => date('Y-m-d H:i:s'),
-            ]);
-        } else {
-            // Verify email if not already verified
-            if (!$user->emailVerified) {
-                $this->userRepository->verifyEmail($user->id);
-                $updatedUser = $this->userRepository->findById($user->id);
-                if ($updatedUser !== null) {
-                    $user = $updatedUser;
+            // Find or create user
+            $user = $this->userRepository->findByEmail($email);
+
+            if ($user === null) {
+                $this->logger->info('Creating new user via magic link', ['email' => $email]);
+
+                // Auto-create user for magic link
+                $user = $this->userRepository->create([
+                    'id' => IdGenerator::ulid(),
+                    'email' => $email,
+                    'password_hash' => null,
+                    'email_verified' => true, // Magic link confirms email ownership
+                    'email_verified_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                $this->logger->info('User created successfully via magic link', [
+                    'user_id' => $user->getId(),
+                    'email' => $email,
+                ]);
+            } else {
+                $this->logger->debug('Existing user found for magic link', [
+                    'user_id' => $user->getId(),
+                    'email' => $email,
+                ]);
+
+                // Verify email if not already verified
+                if (!$user->isEmailVerified()) {
+                    $this->logger->info('Verifying email for user', ['user_id' => $user->getId()]);
+                    $this->userRepository->verifyEmail($user->getId());
+                    $updatedUser = $this->userRepository->findById($user->getId());
+                    if ($updatedUser !== null) {
+                        $user = $updatedUser;
+                    }
                 }
             }
+
+            // Create authentication tokens/session based on mode
+            if ($this->authConfig->isApi() && $this->tokenAuthManager !== null) {
+                // API mode: Create JWT tokens (stateless)
+                $this->logger->debug('Magic link: Creating JWT tokens (API mode)', [
+                    'user_id' => $user->getId(),
+                ]);
+
+                $tokens = $this->tokenAuthManager->createTokensForUser($user);
+
+                // Mark token as used AFTER successful token creation
+                $this->magicLinkStorage->markAsUsed($token);
+
+                $this->logger->info('Magic link verification successful (API mode)', [
+                    'user_id' => $user->getId(),
+                    'email' => $email,
+                    'ip_address' => $ipAddress,
+                ]);
+
+                return [
+                    'success' => true,
+                    'access_token' => $tokens['access_token'],
+                    'refresh_token' => $tokens['refresh_token'],
+                    'expires_in' => $tokens['expires_in'],
+                    'token_type' => $tokens['token_type'],
+                    'user' => $user,  // Return full User object like TokenAuthManager does
+                ];
+            } else {
+                // Session mode: Create database session (stateful)
+                $this->logger->debug('Magic link: Creating session (Session mode)', [
+                    'user_id' => $user->getId(),
+                ]);
+
+                $session = $this->sessionService->create($user, $ipAddress, $userAgent);
+
+                // Mark token as used AFTER successful session creation
+                $this->magicLinkStorage->markAsUsed($token);
+
+                $this->logger->info('Magic link verification successful (Session mode)', [
+                    'user_id' => $user->getId(),
+                    'email' => $email,
+                    'ip_address' => $ipAddress,
+                ]);
+
+                return [
+                    'success' => true,
+                    'access_token' => $session->getToken(),
+                    'refresh_token' => $session->getToken(), // Using session token as both
+                    'expires_in' => 604800, // 7 days default
+                    'user' => $user,  // Return full User object like SessionAuthManager does
+                ];
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Magic link verification failed with exception', [
+                'token' => substr($token, 0, 10) . '...',
+                'ip_address' => $ipAddress,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-
-        // Create session
-        $session = $this->sessionService->create($user, $ipAddress, $userAgent);
-
-        return [
-            'success' => true,
-            'access_token' => $session->sessionToken,
-            'refresh_token' => $session->sessionToken, // Using session token as both
-            'expires_in' => 604800, // 7 days default
-            'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'name' => $user->name,
-                'emailVerified' => $user->emailVerified,
-            ],
-        ];
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace BetterAuth\Providers\TotpProvider;
 
 use BetterAuth\Core\Interfaces\TotpStorageInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * TOTP (Time-based One-Time Password) provider for two-factor authentication.
@@ -19,10 +21,14 @@ final class TotpProvider
     private const ALGORITHM = 'sha1';
     private const BACKUP_CODES_COUNT = 10;
 
+    private readonly LoggerInterface $logger;
+
     public function __construct(
         private readonly TotpStorageInterface $totpStorage,
         private readonly string $issuer = 'BetterAuth',
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -34,28 +40,43 @@ final class TotpProvider
      */
     public function generateSecret(string $userId): array
     {
-        // Generate a random secret (base32 encoded)
-        $secret = $this->generateBase32Secret();
+        $this->logger->info('Generating TOTP secret', ['user_id' => $userId]);
 
-        // Generate backup codes
-        $backupCodes = $this->generateBackupCodes();
+        try {
+            // Generate a random secret (base32 encoded)
+            $secret = $this->generateBase32Secret();
 
-        // Store the secret
-        $this->totpStorage->store($userId, $secret, [
-            'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
-            'enabled' => false,
-        ]);
+            // Generate backup codes
+            $backupCodes = $this->generateBackupCodes();
 
-        // Generate QR code URL (otpauth:// URI)
-        $qrCodeUrl = $this->getQrCodeUrl($userId, $secret);
+            // Store the secret
+            $this->totpStorage->store($userId, $secret, [
+                'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
+                'enabled' => false,
+            ]);
 
-        return [
-            'secret' => $secret,
-            'qrCode' => $qrCodeUrl, // Controller expects 'qrCode' key
-            'qrCodeUrl' => $qrCodeUrl,
-            'manualEntryKey' => $secret,
-            'backupCodes' => $backupCodes,
-        ];
+            // Generate QR code URL (otpauth:// URI)
+            $qrCodeUrl = $this->getQrCodeUrl($userId, $secret);
+
+            $this->logger->info('TOTP secret generated successfully', [
+                'user_id' => $userId,
+                'backup_codes_count' => count($backupCodes),
+            ]);
+
+            return [
+                'secret' => $secret,
+                'qrCode' => $qrCodeUrl, // Controller expects 'qrCode' key
+                'qrCodeUrl' => $qrCodeUrl,
+                'manualEntryKey' => $secret,
+                'backupCodes' => $backupCodes,
+            ];
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to generate TOTP secret', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -67,17 +88,28 @@ final class TotpProvider
      */
     public function verifyAndEnable(string $userId, string $code): bool
     {
+        $this->logger->info('TOTP verify and enable attempt', ['user_id' => $userId]);
+
         $totpData = $this->totpStorage->findByUserId($userId);
 
         if ($totpData === null) {
+            $this->logger->warning('TOTP verify and enable failed: TOTP not configured', [
+                'user_id' => $userId,
+            ]);
             return false;
         }
 
         if ($this->verifyCode($totpData['secret'], $code)) {
             $this->totpStorage->enable($userId);
 
+            $this->logger->info('TOTP enabled successfully', ['user_id' => $userId]);
+
             return true;
         }
+
+        $this->logger->warning('TOTP verify and enable failed: Invalid code', [
+            'user_id' => $userId,
+        ]);
 
         return false;
     }
@@ -91,19 +123,35 @@ final class TotpProvider
      */
     public function verify(string $userId, string $code): bool
     {
+        $this->logger->debug('TOTP verification attempt', ['user_id' => $userId]);
+
         $totpData = $this->totpStorage->findByUserId($userId);
 
         if ($totpData === null || !$totpData['enabled']) {
+            $this->logger->warning('TOTP verification failed: TOTP not configured or not enabled', [
+                'user_id' => $userId,
+                'found' => $totpData !== null,
+                'enabled' => $totpData['enabled'] ?? false,
+            ]);
             return false;
         }
 
         // Try verifying as TOTP code
         if ($this->verifyCode($totpData['secret'], $code)) {
+            $this->logger->info('TOTP code verified successfully', ['user_id' => $userId]);
             return true;
         }
 
         // Try verifying as backup code
-        return $this->totpStorage->useBackupCode($userId, $code);
+        $backupCodeValid = $this->totpStorage->useBackupCode($userId, $code);
+
+        if ($backupCodeValid) {
+            $this->logger->info('TOTP backup code used successfully', ['user_id' => $userId]);
+        } else {
+            $this->logger->warning('TOTP verification failed: Invalid code', ['user_id' => $userId]);
+        }
+
+        return $backupCodeValid;
     }
 
     /**
@@ -115,18 +163,30 @@ final class TotpProvider
      */
     public function disable(string $userId, string $code): bool
     {
+        $this->logger->info('TOTP disable attempt', ['user_id' => $userId]);
+
         $totpData = $this->totpStorage->findByUserId($userId);
 
         if ($totpData === null || !$totpData['enabled']) {
+            $this->logger->warning('TOTP disable failed: TOTP not configured or not enabled', [
+                'user_id' => $userId,
+            ]);
             return false;
         }
 
         // Verify code before disabling
         if (!$this->verifyCode($totpData['secret'], $code)) {
+            $this->logger->warning('TOTP disable failed: Invalid code', ['user_id' => $userId]);
             return false;
         }
 
-        return $this->totpStorage->disable($userId);
+        $result = $this->totpStorage->disable($userId);
+
+        if ($result) {
+            $this->logger->info('TOTP disabled successfully', ['user_id' => $userId]);
+        }
+
+        return $result;
     }
 
     /**

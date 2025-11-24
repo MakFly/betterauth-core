@@ -85,6 +85,14 @@ abstract class BaseToken
         return $this;
     }
 
+    /**
+     * Check if the token is valid (not expired and not used).
+     */
+    public function isValid(): bool
+    {
+        return !$this->used && $this->expiresAt > new DateTimeImmutable();
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
