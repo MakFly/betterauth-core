@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\DeviceManagementProvider;
 
-class GeolocationService
+final class GeolocationService
 {
     public function getLocation(?string $ipAddress): ?string
     {

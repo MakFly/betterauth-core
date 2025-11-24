@@ -6,8 +6,10 @@ namespace BetterAuth\Core\Exceptions;
 
 /**
  * Exception thrown when a token is invalid or expired.
+ *
+ * This exception is final to prevent over-specialization of token errors.
  */
-class InvalidTokenException extends AuthException
+final class InvalidTokenException extends AuthException
 {
     public function __construct(string $message = 'Invalid or expired token')
     {

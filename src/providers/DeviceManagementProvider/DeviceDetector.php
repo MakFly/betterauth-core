@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\DeviceManagementProvider;
 
-class DeviceDetector
+/**
+ * Device detector for extracting device information from user agents.
+ *
+ * This service is final to ensure consistent device detection behavior.
+ */
+final class DeviceDetector
 {
     public function detect(?string $userAgent): array
     {

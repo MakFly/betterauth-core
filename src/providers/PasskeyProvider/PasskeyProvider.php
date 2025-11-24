@@ -18,7 +18,7 @@ use BetterAuth\Core\Utils\Crypto;
  * Note: This is a simplified implementation. For production use,
  * integrate with a proper WebAuthn library like web-auth/webauthn-lib.
  */
-class PasskeyProvider
+final class PasskeyProvider
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,

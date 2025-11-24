@@ -10,7 +10,7 @@ use BetterAuth\Core\Entities\ProviderUser;
  * Twitter (X) OAuth provider implementation.
  * Uses OAuth 2.0 with PKCE (Twitter API v2).
  */
-class TwitterProvider extends AbstractOAuthProvider
+final class TwitterProvider extends AbstractOAuthProvider
 {
     private ?string $codeVerifier = null;
 

@@ -13,8 +13,10 @@ use DateTimeImmutable;
 
 /**
  * Service for managing user sessions.
+ *
+ * This service is final to ensure consistent session management behavior.
  */
-class SessionService
+final class SessionService
 {
     public function __construct(
         private readonly SessionRepositoryInterface $sessionRepository,

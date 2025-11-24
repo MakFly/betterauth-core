@@ -21,8 +21,10 @@ use DateTimeImmutable;
  * Perfect for REST APIs, SPAs, mobile apps, and microservices.
  *
  * For session-based authentication with cookies, use SessionAuthManager instead.
+ *
+ * This class is final to ensure consistent token authentication behavior.
  */
-class TokenAuthManager
+final class TokenAuthManager
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,

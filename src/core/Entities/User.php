@@ -8,20 +8,23 @@ use DateTimeImmutable;
 
 /**
  * User entity representing an authenticated user.
+ *
+ * This is a readonly immutable value object.
+ * Use the repository to create modified copies.
  */
-class User
+readonly class User
 {
     public function __construct(
-        public readonly string $id,
-        public readonly string $email,
-        public readonly ?string $passwordHash,
-        public readonly ?string $name,
-        public readonly ?string $avatar,
-        public readonly bool $emailVerified,
-        public readonly ?DateTimeImmutable $emailVerifiedAt,
-        public readonly DateTimeImmutable $createdAt,
-        public readonly DateTimeImmutable $updatedAt,
-        public readonly ?array $metadata = null,
+        public string $id,
+        public string $email,
+        public ?string $passwordHash,
+        public ?string $name,
+        public ?string $avatar,
+        public bool $emailVerified,
+        public ?DateTimeImmutable $emailVerifiedAt,
+        public DateTimeImmutable $createdAt,
+        public DateTimeImmutable $updatedAt,
+        public ?array $metadata = null,
     ) {
     }
 

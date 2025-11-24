@@ -11,8 +11,10 @@ use BetterAuth\Core\Utils\Crypto;
 /**
  * Token service for signing and verifying tokens.
  * This is a simplified implementation. For production, consider using paragonie/paseto.
+ *
+ * This service is final to ensure consistent token security behavior.
  */
-class TokenService implements TokenSignerInterface
+final class TokenService implements TokenSignerInterface
 {
     private const HEADER = 'v4.local.';
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\DeviceManagementProvider;
 
-class DeviceFingerprintService
+final class DeviceFingerprintService
 {
     public function generate(?string $userAgent, ?string $ipAddress, ?array $additionalData = null): string
     {

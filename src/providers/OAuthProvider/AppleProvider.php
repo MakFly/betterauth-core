@@ -14,7 +14,7 @@ use BetterAuth\Core\Entities\ProviderUser;
  *
  * @see https://developer.apple.com/documentation/sign_in_with_apple
  */
-class AppleProvider extends AbstractOAuthProvider
+final class AppleProvider extends AbstractOAuthProvider
 {
     public function __construct(
         string $clientId,

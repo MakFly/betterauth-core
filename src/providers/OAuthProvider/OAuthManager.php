@@ -13,8 +13,10 @@ use BetterAuth\Core\Utils\Crypto;
 
 /**
  * OAuth manager for handling OAuth authentication flow.
+ *
+ * This manager is final to ensure consistent OAuth behavior.
  */
-class OAuthManager
+final class OAuthManager
 {
     /** @var array<string, OAuthProviderInterface> */
     private array $providers = [];

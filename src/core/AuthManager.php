@@ -20,6 +20,9 @@ use BetterAuth\Core\Entities\User;
  * - Use TokenAuthManager directly for explicit token-based auth
  * - Use AuthManager for automatic mode detection and delegation
  *
+ * This class is final as it's a facade that should not be extended.
+ * Extend the underlying managers if you need custom behavior.
+ *
  * @example
  * ```php
  * // Automatic mode detection
@@ -27,7 +30,7 @@ use BetterAuth\Core\Entities\User;
  * $result = $auth->signIn($email, $password, $ip, $userAgent);
  * ```
  */
-class AuthManager
+final class AuthManager
 {
     private readonly AuthMode $mode;
 
@@ -158,6 +161,32 @@ class AuthManager
         }
 
         return $this->tokenAuthManager->revokeAllTokens($userId);
+    }
+
+    /**
+     * Get all sessions for a user (session mode only).
+     *
+     * @return Session[]
+     */
+    public function getUserSessions(string $userId): array
+    {
+        if (!$this->mode->isMonolith()) {
+            throw new \BadMethodCallException('getUserSessions is only available in session mode');
+        }
+
+        return $this->sessionAuthManager->getUserSessions($userId);
+    }
+
+    /**
+     * Revoke a specific session for a user (session mode only).
+     */
+    public function revokeSession(string $userId, string $sessionId): bool
+    {
+        if (!$this->mode->isMonolith()) {
+            throw new \BadMethodCallException('revokeSession is only available in session mode');
+        }
+
+        return $this->sessionAuthManager->revokeSession($userId, $sessionId);
     }
 
     /**

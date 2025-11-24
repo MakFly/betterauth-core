@@ -9,7 +9,7 @@ use BetterAuth\Core\Entities\ProviderUser;
 /**
  * Google OAuth provider implementation.
  */
-class GoogleProvider extends AbstractOAuthProvider
+final class GoogleProvider extends AbstractOAuthProvider
 {
     public function getName(): string
     {

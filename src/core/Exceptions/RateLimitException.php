@@ -6,8 +6,10 @@ namespace BetterAuth\Core\Exceptions;
 
 /**
  * Exception thrown when rate limit is exceeded.
+ *
+ * This exception is final to prevent over-specialization of rate limit errors.
  */
-class RateLimitException extends AuthException
+final class RateLimitException extends AuthException
 {
     public function __construct(
         string $message = 'Too many attempts. Please try again later.',

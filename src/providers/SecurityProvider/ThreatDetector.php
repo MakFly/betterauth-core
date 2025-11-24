@@ -12,7 +12,7 @@ use BetterAuth\Providers\DeviceManagementProvider\DeviceFingerprintService;
 use BetterAuth\Providers\DeviceManagementProvider\GeolocationService;
 use DateTimeImmutable;
 
-class ThreatDetector
+final class ThreatDetector
 {
     public function __construct(
         private SuspiciousActivityRepositoryInterface $suspiciousActivityRepository,

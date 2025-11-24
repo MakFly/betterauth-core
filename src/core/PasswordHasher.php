@@ -6,8 +6,10 @@ namespace BetterAuth\Core;
 
 /**
  * Password hashing service using Argon2id.
+ *
+ * This service is final to prevent extension and ensure consistent security behavior.
  */
-class PasswordHasher
+final class PasswordHasher
 {
     private const ALGORITHM = PASSWORD_ARGON2ID;
 

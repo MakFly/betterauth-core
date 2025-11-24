@@ -17,7 +17,7 @@ use BetterAuth\Core\Utils\Crypto;
 /**
  * Password reset provider for handling password reset flows.
  */
-class PasswordResetProvider
+final class PasswordResetProvider
 {
     private const TOKEN_EXPIRY = 3600; // 1 hour
 

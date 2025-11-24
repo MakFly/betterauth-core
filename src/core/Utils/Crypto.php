@@ -8,8 +8,10 @@ use Exception;
 
 /**
  * Cryptographic utilities for secure random generation.
+ *
+ * This utility class is final to ensure consistent cryptographic behavior.
  */
-class Crypto
+final class Crypto
 {
     /**
      * Generate a cryptographically secure random string.

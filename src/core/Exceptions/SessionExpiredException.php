@@ -6,8 +6,10 @@ namespace BetterAuth\Core\Exceptions;
 
 /**
  * Exception thrown when a session has expired.
+ *
+ * This exception is final to prevent over-specialization of session errors.
  */
-class SessionExpiredException extends AuthException
+final class SessionExpiredException extends AuthException
 {
     public function __construct(string $message = 'Session has expired')
     {

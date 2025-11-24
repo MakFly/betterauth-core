@@ -13,7 +13,7 @@ use BetterAuth\Core\Interfaces\RateLimiterInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\Utils\Crypto;
 
-class EmailVerificationProvider
+final class EmailVerificationProvider
 {
     private const TOKEN_EXPIRY = 86400; // 24 hours
 

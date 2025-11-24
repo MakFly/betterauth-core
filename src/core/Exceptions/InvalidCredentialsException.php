@@ -6,8 +6,10 @@ namespace BetterAuth\Core\Exceptions;
 
 /**
  * Exception thrown when credentials are invalid.
+ *
+ * This exception is final to prevent over-specialization of credential errors.
  */
-class InvalidCredentialsException extends AuthException
+final class InvalidCredentialsException extends AuthException
 {
     public function __construct(string $message = 'Invalid credentials')
     {

@@ -12,7 +12,7 @@ use BetterAuth\Core\Interfaces\TotpStorageInterface;
  * Note: This is a simplified implementation. For production use,
  * consider using a library like spomky-labs/otphp.
  */
-class TotpProvider
+final class TotpProvider
 {
     private const PERIOD = 30; // 30 seconds
     private const DIGITS = 6;

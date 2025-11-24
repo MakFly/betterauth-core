@@ -19,8 +19,10 @@ use BetterAuth\Core\Interfaces\UserRepositoryInterface;
  * Perfect for traditional web applications with cookies.
  *
  * For stateless API authentication with JWT/Paseto tokens, use TokenAuthManager instead.
+ *
+ * This class is final to ensure consistent session authentication behavior.
  */
-class SessionAuthManager
+final class SessionAuthManager
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
@@ -194,5 +196,34 @@ class SessionAuthManager
     public function validateSession(string $sessionToken): Session
     {
         return $this->sessionService->validate($sessionToken);
+    }
+
+    /**
+     * Get all sessions for a user.
+     *
+     * @param string $userId The user ID
+     * @return Session[] Array of sessions
+     */
+    public function getUserSessions(string $userId): array
+    {
+        return $this->sessionService->getAllForUser($userId);
+    }
+
+    /**
+     * Revoke a specific session for a user.
+     *
+     * @param string $userId The user ID
+     * @param string $sessionId The session token to revoke
+     * @return bool True if revoked, false otherwise
+     */
+    public function revokeSession(string $userId, string $sessionId): bool
+    {
+        // Verify that the session belongs to the user
+        $session = $this->sessionService->validate($sessionId);
+        if ($session->userId !== $userId) {
+            throw new \InvalidArgumentException('Session does not belong to user');
+        }
+
+        return $this->sessionService->delete($sessionId);
     }
 }

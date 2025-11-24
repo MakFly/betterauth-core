@@ -8,16 +8,18 @@ use DateTimeImmutable;
 
 /**
  * Refresh token entity for API mode.
+ *
+ * This is a readonly immutable value object.
  */
-class RefreshToken
+readonly class RefreshToken
 {
     public function __construct(
-        public readonly string $token,
-        public readonly string $userId,
-        public readonly DateTimeImmutable $expiresAt,
-        public readonly DateTimeImmutable $createdAt,
-        public readonly bool $revoked = false,
-        public readonly ?string $replacedBy = null,
+        public string $token,
+        public string $userId,
+        public DateTimeImmutable $expiresAt,
+        public DateTimeImmutable $createdAt,
+        public bool $revoked = false,
+        public ?string $replacedBy = null,
     ) {
     }
 

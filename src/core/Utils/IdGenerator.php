@@ -8,8 +8,10 @@ use Exception;
 
 /**
  * ID generation utilities.
+ *
+ * This utility class is final to ensure consistent ID generation behavior.
  */
-class IdGenerator
+final class IdGenerator
 {
     /**
      * Generate a UUID v4.

@@ -9,8 +9,10 @@ use BetterAuth\Core\Interfaces\RateLimiterInterface;
 /**
  * Simple in-memory rate limiter implementation.
  * For production use, consider using Redis or another cache backend.
+ *
+ * This service is final to ensure consistent rate limiting behavior.
  */
-class RateLimiter implements RateLimiterInterface
+final class RateLimiter implements RateLimiterInterface
 {
     /** @var array<string, array{attempts: int, reset: int}> */
     private array $storage = [];

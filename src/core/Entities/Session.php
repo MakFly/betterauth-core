@@ -8,20 +8,22 @@ use DateTimeImmutable;
 
 /**
  * Session entity representing an active user session.
+ *
+ * This is a readonly immutable value object.
  */
-class Session
+readonly class Session
 {
     public function __construct(
-        public readonly string $token,
-        public readonly string $userId,
-        public readonly DateTimeImmutable $expiresAt,
-        public readonly string $ipAddress,
-        public readonly string $userAgent,
-        public readonly DateTimeImmutable $createdAt,
-        public readonly DateTimeImmutable $updatedAt,
-        public readonly ?array $metadata = null,
-        public readonly ?string $activeOrganizationId = null,
-        public readonly ?string $activeTeamId = null,
+        public string $token,
+        public string $userId,
+        public DateTimeImmutable $expiresAt,
+        public string $ipAddress,
+        public string $userAgent,
+        public DateTimeImmutable $createdAt,
+        public DateTimeImmutable $updatedAt,
+        public ?array $metadata = null,
+        public ?string $activeOrganizationId = null,
+        public ?string $activeTeamId = null,
     ) {
     }
 

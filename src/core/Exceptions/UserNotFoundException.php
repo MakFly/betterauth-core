@@ -6,8 +6,10 @@ namespace BetterAuth\Core\Exceptions;
 
 /**
  * Exception thrown when a user is not found.
+ *
+ * This exception is final to prevent over-specialization of user lookup errors.
  */
-class UserNotFoundException extends AuthException
+final class UserNotFoundException extends AuthException
 {
     public function __construct(string $message = 'User not found')
     {

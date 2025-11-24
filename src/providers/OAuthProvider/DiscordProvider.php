@@ -9,7 +9,7 @@ use BetterAuth\Core\Entities\ProviderUser;
 /**
  * Discord OAuth provider implementation.
  */
-class DiscordProvider extends AbstractOAuthProvider
+final class DiscordProvider extends AbstractOAuthProvider
 {
     public function getName(): string
     {

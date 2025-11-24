@@ -19,7 +19,7 @@ use BetterAuth\Core\Utils\IdGenerator;
 /**
  * Magic link (passwordless) authentication provider.
  */
-class MagicLinkProvider
+final class MagicLinkProvider
 {
     private const TOKEN_EXPIRY = 600; // 10 minutes
 

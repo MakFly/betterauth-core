@@ -10,7 +10,7 @@ use BetterAuth\Core\Entities\ProviderUser;
  * Microsoft OAuth provider implementation.
  * Supports Microsoft Azure AD / Microsoft Account login.
  */
-class MicrosoftProvider extends AbstractOAuthProvider
+final class MicrosoftProvider extends AbstractOAuthProvider
 {
     public function __construct(
         string $clientId,

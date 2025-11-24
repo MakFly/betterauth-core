@@ -9,7 +9,7 @@ use BetterAuth\Core\Entities\ProviderUser;
 /**
  * GitHub OAuth provider implementation.
  */
-class GitHubProvider extends AbstractOAuthProvider
+final class GitHubProvider extends AbstractOAuthProvider
 {
     public function getName(): string
     {

@@ -11,7 +11,7 @@ use BetterAuth\Core\Entities\User;
 /**
  * Email/Password authentication provider.
  */
-class EmailPasswordProvider
+final class EmailPasswordProvider
 {
     public function __construct(
         private readonly AuthManager $authManager,

@@ -19,7 +19,7 @@ use DateTimeImmutable;
  *
  * This allows other applications to use BetterAuth as their authentication provider.
  */
-class OidcProvider
+final class OidcProvider
 {
     private const SUPPORTED_SCOPES = ['openid', 'profile', 'email', 'offline_access'];
 

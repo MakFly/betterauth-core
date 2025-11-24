@@ -11,7 +11,7 @@ use BetterAuth\Core\Entities\ProviderUser;
  *
  * @see https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow
  */
-class FacebookProvider extends AbstractOAuthProvider
+final class FacebookProvider extends AbstractOAuthProvider
 {
     public function getName(): string
     {
