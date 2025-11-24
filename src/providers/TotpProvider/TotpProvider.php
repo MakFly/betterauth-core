@@ -29,7 +29,7 @@ final class TotpProvider
      * Generate a new TOTP secret for a user.
      *
      * @param string $userId
-     * @return array{secret: string, qrCodeUrl: string, backupCodes: array<string>}
+     * @return array{secret: string, qrCode: string, qrCodeUrl?: string, manualEntryKey?: string, backupCodes: array<string>}
      * @throws \Exception
      */
     public function generateSecret(string $userId): array
@@ -51,7 +51,9 @@ final class TotpProvider
 
         return [
             'secret' => $secret,
+            'qrCode' => $qrCodeUrl, // Controller expects 'qrCode' key
             'qrCodeUrl' => $qrCodeUrl,
+            'manualEntryKey' => $secret,
             'backupCodes' => $backupCodes,
         ];
     }
@@ -108,10 +110,22 @@ final class TotpProvider
      * Disable TOTP for a user.
      *
      * @param string $userId
+     * @param string $code Verification code required to disable
      * @return bool
      */
-    public function disable(string $userId): bool
+    public function disable(string $userId, string $code): bool
     {
+        $totpData = $this->totpStorage->findByUserId($userId);
+
+        if ($totpData === null || !$totpData['enabled']) {
+            return false;
+        }
+
+        // Verify code before disabling
+        if (!$this->verifyCode($totpData['secret'], $code)) {
+            return false;
+        }
+
         return $this->totpStorage->disable($userId);
     }
 
@@ -119,15 +133,21 @@ final class TotpProvider
      * Regenerate backup codes.
      *
      * @param string $userId
-     * @return array<string> New backup codes
+     * @param string $code Verification code required
+     * @return array{success: bool, backupCodes?: array<string>, error?: string} Result with new backup codes
      * @throws \Exception
      */
-    public function regenerateBackupCodes(string $userId): array
+    public function regenerateBackupCodes(string $userId, string $code): array
     {
         $totpData = $this->totpStorage->findByUserId($userId);
 
         if ($totpData === null) {
-            throw new \RuntimeException('TOTP not configured for user');
+            return ['success' => false, 'error' => 'TOTP not configured for user'];
+        }
+
+        // Verify code before regenerating
+        if (!$this->verifyCode($totpData['secret'], $code)) {
+            return ['success' => false, 'error' => 'Invalid verification code'];
         }
 
         $backupCodes = $this->generateBackupCodes();
@@ -137,7 +157,43 @@ final class TotpProvider
             'enabled' => $totpData['enabled'],
         ]);
 
-        return $backupCodes;
+        return ['success' => true, 'backupCodes' => $backupCodes];
+    }
+
+    /**
+     * Validate a TOTP or backup code during login.
+     *
+     * @param string $email The user's email
+     * @param string $code The TOTP or backup code
+     * @param bool $isBackupCode Whether the code is a backup code
+     * @return array{valid: bool, userId?: string} Result of validation
+     */
+    public function validateCode(string $email, string $code, bool $isBackupCode = false): array
+    {
+        // This would need UserRepository to find user by email
+        // For now, return a basic structure
+        // In real implementation, find user by email then verify code
+        return ['valid' => false];
+    }
+
+    /**
+     * Get TOTP status for a user.
+     *
+     * @param string $userId
+     * @return array{enabled: bool, backupCodesRemaining?: int}
+     */
+    public function getStatus(string $userId): array
+    {
+        $totpData = $this->totpStorage->findByUserId($userId);
+
+        if ($totpData === null) {
+            return ['enabled' => false];
+        }
+
+        return [
+            'enabled' => $totpData['enabled'],
+            'backupCodesRemaining' => count($totpData['backup_codes'] ?? []),
+        ];
     }
 
     /**

@@ -31,15 +31,15 @@ final class PasswordResetProvider
     }
 
     /**
-     * Request a password reset by sending an email with reset link.
+     * Send a password reset email.
      *
      * @param string $email The user's email
-     * @param string $callbackUrl The callback URL (token will be appended)
-     * @return bool True if email sent successfully
+     * @param string|null $callbackUrl Optional callback URL (token will be appended)
+     * @return array{success: bool} Result of the request
      * @throws RateLimitException
      * @throws \Exception
      */
-    public function requestReset(string $email, string $callbackUrl): bool
+    public function sendResetEmail(string $email, ?string $callbackUrl = null): array
     {
         // Rate limiting
         $rateLimitKey = "password_reset:$email";
@@ -56,11 +56,11 @@ final class PasswordResetProvider
         $user = $this->userRepository->findByEmail($email);
 
         // Don't reveal if user exists or not (security best practice)
-        // Always return true but only send email if user exists
+        // Always return success but only send email if user exists
         if ($user === null) {
             $this->rateLimiter?->hit($rateLimitKey, 3600);
 
-            return true;
+            return ['success' => true];
         }
 
         $this->rateLimiter?->hit($rateLimitKey, 3600);
@@ -74,25 +74,55 @@ final class PasswordResetProvider
         // Store token
         $this->passwordResetStorage->store($token, $email, self::TOKEN_EXPIRY);
 
-        // Build reset link URL
-        $separator = str_contains($callbackUrl, '?') ? '&' : '?';
-        $resetLink = $callbackUrl . $separator . 'token=' . urlencode($token);
+        if ($callbackUrl !== null) {
+            // Build reset link URL
+            $separator = str_contains($callbackUrl, '?') ? '&' : '?';
+            $resetLink = $callbackUrl . $separator . 'token=' . urlencode($token);
 
-        // Send email
-        return $this->emailSender->sendPasswordReset($email, $resetLink);
+            // Send email
+            $this->emailSender->sendPasswordReset($email, $resetLink);
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Alias for sendResetEmail for backward compatibility.
+     *
+     * @deprecated Use sendResetEmail() instead
+     */
+    public function requestReset(string $email, string $callbackUrl): bool
+    {
+        $result = $this->sendResetEmail($email, $callbackUrl);
+        return $result['success'];
     }
 
     /**
      * Verify a password reset token.
      *
      * @param string $token The reset token
-     * @return bool True if token is valid
+     * @return array{valid: bool, email?: string} Result of verification
      */
-    public function verifyToken(string $token): bool
+    public function verifyResetToken(string $token): array
     {
         $resetToken = $this->passwordResetStorage->findByToken($token);
 
-        return $resetToken !== null && $resetToken->isValid();
+        if ($resetToken !== null && $resetToken->isValid()) {
+            return ['valid' => true, 'email' => $resetToken->email];
+        }
+
+        return ['valid' => false];
+    }
+
+    /**
+     * Alias for verifyResetToken for backward compatibility.
+     *
+     * @deprecated Use verifyResetToken() instead
+     */
+    public function verifyToken(string $token): bool
+    {
+        $result = $this->verifyResetToken($token);
+        return $result['valid'];
     }
 
     /**
@@ -100,24 +130,22 @@ final class PasswordResetProvider
      *
      * @param string $token The reset token
      * @param string $newPassword The new password
-     * @return bool True if password was reset successfully
-     * @throws InvalidTokenException
-     * @throws UserNotFoundException
+     * @return array{success: bool, error?: string} Result of password reset
      */
-    public function resetPassword(string $token, string $newPassword): bool
+    public function resetPassword(string $token, string $newPassword): array
     {
         // Find and validate token
         $resetToken = $this->passwordResetStorage->findByToken($token);
 
         if ($resetToken === null || !$resetToken->isValid()) {
-            throw new InvalidTokenException('Invalid or expired password reset token');
+            return ['success' => false, 'error' => 'Invalid or expired password reset token'];
         }
 
         // Find user
         $user = $this->userRepository->findByEmail($resetToken->email);
 
         if ($user === null) {
-            throw new UserNotFoundException();
+            return ['success' => false, 'error' => 'User not found'];
         }
 
         // Update password
@@ -132,7 +160,7 @@ final class PasswordResetProvider
         // Clear rate limit
         $this->rateLimiter?->clear("password_reset:{$resetToken->email}");
 
-        return true;
+        return ['success' => true];
     }
 
     /**

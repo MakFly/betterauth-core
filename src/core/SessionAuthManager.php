@@ -226,4 +226,24 @@ final class SessionAuthManager
 
         return $this->sessionService->delete($sessionId);
     }
+
+    /**
+     * Get the user repository.
+     *
+     * @internal Used by AuthManager for two-factor authentication
+     */
+    public function getUserRepository(): UserRepositoryInterface
+    {
+        return $this->userRepository;
+    }
+
+    /**
+     * Get the session service.
+     *
+     * @internal Used by AuthManager for two-factor authentication
+     */
+    public function getSessionService(): SessionService
+    {
+        return $this->sessionService;
+    }
 }

@@ -236,4 +236,36 @@ final class AuthManager
     {
         return $this->mode->isApi();
     }
+
+    /**
+     * Complete two-factor authentication login after validating TOTP code.
+     *
+     * @param string $email The user's email
+     * @param string $ipAddress The user's IP address
+     * @param string $userAgent The user's user agent
+     * @return array Authentication result (tokens or session depending on mode)
+     */
+    public function completeTwoFactorLogin(string $email, string $ipAddress, string $userAgent): array
+    {
+        if ($this->mode->isMonolith() && $this->sessionAuthManager) {
+            // For session mode, find user and create session
+            $userRepo = $this->sessionAuthManager->getUserRepository();
+            $user = $userRepo->findByEmail($email);
+
+            if ($user === null) {
+                throw new \RuntimeException('User not found');
+            }
+
+            $sessionService = $this->sessionAuthManager->getSessionService();
+            $session = $sessionService->create($user, $ipAddress, $userAgent);
+
+            return [
+                'user' => $user,
+                'session' => $session,
+                'sessionToken' => $session->sessionToken,
+            ];
+        }
+
+        throw new \BadMethodCallException('completeTwoFactorLogin is not implemented for API mode yet');
+    }
 }

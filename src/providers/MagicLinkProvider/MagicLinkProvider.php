@@ -36,12 +36,14 @@ final class MagicLinkProvider
      * Send a magic link to the user's email.
      *
      * @param string $email The user's email
-     * @param string $callbackUrl The callback URL (magic link will be appended)
-     * @return bool True if sent successfully
+     * @param string $ipAddress The user's IP address
+     * @param string $userAgent The user's user agent
+     * @param string|null $callbackUrl Optional callback URL (magic link will be appended)
+     * @return array{success: bool, expiresIn: int} Result with expiration time
      * @throws RateLimitException
      * @throws \Exception
      */
-    public function sendMagicLink(string $email, string $callbackUrl): bool
+    public function sendMagicLink(string $email, string $ipAddress, string $userAgent, ?string $callbackUrl = null): array
     {
         // Rate limiting
         $rateLimitKey = "magic_link:$email";
@@ -59,12 +61,16 @@ final class MagicLinkProvider
         // Store token
         $this->magicLinkStorage->store($token, $email, self::TOKEN_EXPIRY);
 
-        // Build magic link URL
-        $separator = str_contains($callbackUrl, '?') ? '&' : '?';
-        $magicLink = $callbackUrl . $separator . 'token=' . urlencode($token);
+        if ($callbackUrl !== null) {
+            // Build magic link URL
+            $separator = str_contains($callbackUrl, '?') ? '&' : '?';
+            $magicLink = $callbackUrl . $separator . 'token=' . urlencode($token);
 
-        // Send email
-        return $this->emailSender->sendMagicLink($email, $magicLink);
+            // Send email
+            $this->emailSender->sendMagicLink($email, $magicLink);
+        }
+
+        return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
     }
 
     /**
@@ -73,8 +79,7 @@ final class MagicLinkProvider
      * @param string $token The magic link token
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
-     * @return array{user: User, session: Session} The user and session
-     * @throws InvalidTokenException
+     * @return array{success: bool, error?: string, access_token?: string, refresh_token?: string, expires_in?: int, user?: array} Result of verification
      * @throws \Exception
      */
     public function verifyMagicLink(string $token, string $ipAddress, string $userAgent): array
@@ -83,7 +88,7 @@ final class MagicLinkProvider
         $magicLinkToken = $this->magicLinkStorage->findByToken($token);
 
         if ($magicLinkToken === null || !$magicLinkToken->isValid()) {
-            throw new InvalidTokenException('Invalid or expired magic link');
+            return ['success' => false, 'error' => 'Invalid or expired magic link'];
         }
 
         // Mark token as used
@@ -116,8 +121,16 @@ final class MagicLinkProvider
         $session = $this->sessionService->create($user, $ipAddress, $userAgent);
 
         return [
-            'user' => $user,
-            'session' => $session,
+            'success' => true,
+            'access_token' => $session->sessionToken,
+            'refresh_token' => $session->sessionToken, // Using session token as both
+            'expires_in' => 604800, // 7 days default
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'emailVerified' => $user->emailVerified,
+            ],
         ];
     }
 }
