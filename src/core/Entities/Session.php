@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Session entity representing a user session.
  */
 #[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 class Session
 {
     #[ORM\Id]
@@ -185,5 +186,22 @@ class Session
             'active_organization_id' => $this->activeOrganizationId,
             'active_team_id' => $this->activeTeamId,
         ];
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new DateTimeImmutable();
+        }
+        if (!isset($this->updatedAt)) {
+            $this->updatedAt = new DateTimeImmutable();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new DateTimeImmutable();
     }
 }

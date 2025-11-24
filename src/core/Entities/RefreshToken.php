@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * RefreshToken entity for JWT token refresh.
  */
 #[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 class RefreshToken
 {
     #[ORM\Id]
@@ -121,5 +122,13 @@ class RefreshToken
             'revoked' => $this->revoked,
             'replaced_by' => $this->replacedBy,
         ];
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new DateTimeImmutable();
+        }
     }
 }

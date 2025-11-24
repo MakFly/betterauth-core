@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * User entity representing an authenticated user.
  */
 #[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 class User
 {
     #[ORM\Id]
@@ -195,5 +196,22 @@ class User
             'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
             'metadata' => $this->metadata,
         ];
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new DateTimeImmutable();
+        }
+        if (!isset($this->updatedAt)) {
+            $this->updatedAt = new DateTimeImmutable();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new DateTimeImmutable();
     }
 }

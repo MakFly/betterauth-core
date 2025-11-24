@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Base class for all authentication tokens.
  */
 #[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 abstract class BaseToken
 {
     #[ORM\Id]
@@ -82,5 +83,13 @@ abstract class BaseToken
     {
         $this->used = $used;
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new DateTimeImmutable();
+        }
     }
 }
