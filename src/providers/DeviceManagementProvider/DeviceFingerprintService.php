@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\DeviceManagementProvider;
 
-final class DeviceFingerprintService
+/**
+ * Device fingerprinting service.
+ *
+ * Note: This class is not final to allow mocking in tests.
+ */
+class DeviceFingerprintService
 {
     public function generate(?string $userAgent, ?string $ipAddress, ?array $additionalData = null): string
     {

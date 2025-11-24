@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\DeviceManagementProvider;
 
-final class GeolocationService
+/**
+ * Geolocation service for IP address lookup.
+ *
+ * Note: This class is not final to allow mocking in tests.
+ * In production, consider using a real geolocation provider.
+ */
+class GeolocationService
 {
     public function getLocation(?string $ipAddress): ?string
     {
