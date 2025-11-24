@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * User entity representing an authenticated user.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'users')]
+#[ORM\MappedSuperclass]
 class User
 {
     #[ORM\Id]

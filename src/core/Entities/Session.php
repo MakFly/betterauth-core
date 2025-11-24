@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Session entity representing a user session.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'sessions')]
+#[ORM\MappedSuperclass]
 class Session
 {
     #[ORM\Id]

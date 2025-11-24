@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * RefreshToken entity for JWT token refresh.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'refresh_tokens')]
+#[ORM\MappedSuperclass]
 class RefreshToken
 {
     #[ORM\Id]
