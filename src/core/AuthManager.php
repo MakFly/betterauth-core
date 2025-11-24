@@ -118,9 +118,11 @@ final class AuthManager
      */
     public function updatePassword(string $userId, string $newPassword): User
     {
-        return $this->sessionAuthManager
-            ? $this->sessionAuthManager->updatePassword($userId, $newPassword)
-            : throw new \BadMethodCallException('updatePassword requires SessionAuthManager');
+        if ($this->sessionAuthManager) {
+            return $this->sessionAuthManager->updatePassword($userId, $newPassword);
+        }
+
+        return $this->tokenAuthManager->updatePassword($userId, $newPassword);
     }
 
     /**

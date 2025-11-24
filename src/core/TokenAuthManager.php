@@ -233,6 +233,42 @@ final class TokenAuthManager
     }
 
     /**
+     * Update user password.
+     */
+    public function updatePassword(string $userId, string $newPassword): User
+    {
+        $this->logger->info('Password update attempt', ['user_id' => $userId]);
+
+        $user = $this->userRepository->findById($userId);
+
+        if ($user === null) {
+            $this->logger->error('Password update failed: User not found', ['user_id' => $userId]);
+
+            throw new \RuntimeException('User not found');
+        }
+
+        try {
+            $passwordHash = $this->passwordHasher->hash($newPassword);
+
+            $updatedUser = $this->userRepository->update($userId, ['password_hash' => $passwordHash]);
+
+            $this->logger->info('Password updated successfully', ['user_id' => $userId]);
+
+            // Revoke all refresh tokens after password change for security
+            $this->refreshTokenRepository->revokeAllForUser($userId);
+
+            return $updatedUser;
+        } catch (\Exception $e) {
+            $this->logger->error('Password update failed', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
      * Create access and refresh token pair.
      */
     private function createTokenPair(User $user, ?string $refreshTokenValue = null): array

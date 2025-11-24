@@ -5,172 +5,161 @@ declare(strict_types=1);
 namespace BetterAuth\Core;
 
 use BetterAuth\Core\Exceptions\InvalidTokenException;
+use BetterAuth\Core\Exceptions\TokenExpiredException;
 use BetterAuth\Core\Interfaces\TokenSignerInterface;
-use BetterAuth\Core\Utils\Crypto;
+use ParagonIE\Paseto\Builder;
+use ParagonIE\Paseto\Exception\PasetoException;
+use ParagonIE\Paseto\Keys\SymmetricKey;
+use ParagonIE\Paseto\Parser;
+use ParagonIE\Paseto\Protocol\Version4;
+use ParagonIE\Paseto\ProtocolCollection;
+use ParagonIE\Paseto\Purpose;
+use ParagonIE\Paseto\Rules\IssuedBy;
+use ParagonIE\Paseto\Rules\NotExpired;
 
 /**
- * Token service for signing and verifying tokens.
- * This is a simplified implementation. For production, consider using paragonie/paseto.
+ * Token service using official Paseto V4 library (paragonie/paseto).
+ *
+ * Paseto V4 provides:
+ * - XChaCha20-Poly1305 encryption (256-bit)
+ * - Ed25519 signatures
+ * - Built-in expiration handling
+ * - Cryptographically secure and audited implementation
  *
  * This service is final to ensure consistent token security behavior.
  */
 final class TokenService implements TokenSignerInterface
 {
-    private const HEADER = 'v4.local.';
+    private const ISSUER = 'betterauth';
+
+    private SymmetricKey $key;
 
     public function __construct(
         private readonly string $secretKey,
+        private readonly string $issuer = self::ISSUER,
     ) {
         if (strlen($secretKey) < 32) {
             throw new \InvalidArgumentException('Secret key must be at least 32 characters');
         }
+
+        // Create symmetric key from secret (32 bytes for V4)
+        $keyMaterial = hash('sha256', $secretKey, true);
+        $this->key = new SymmetricKey($keyMaterial);
     }
 
+    /**
+     * Sign a payload and create a Paseto V4 local token.
+     */
     public function sign(array $payload, int $expiresIn): string
     {
-        $now = time();
-        $tokenPayload = [
-            'sub' => $payload['sub'] ?? '',
-            'iat' => $now,
-            'exp' => $now + $expiresIn,
-            'type' => $payload['type'] ?? 'access',
-            'data' => $payload['data'] ?? null,
-        ];
+        $now = new \DateTimeImmutable();
+        $expiration = $now->modify("+{$expiresIn} seconds");
 
-        $json = json_encode($tokenPayload);
-        if ($json === false) {
-            throw new \RuntimeException('Failed to encode token payload');
+        $builder = Builder::getLocal($this->key, new Version4());
+
+        // Set standard claims
+        $builder
+            ->setIssuedAt($now)
+            ->setExpiration($expiration)
+            ->setIssuer($this->issuer);
+
+        // Set subject (user ID)
+        if (isset($payload['sub'])) {
+            $builder->setSubject((string) $payload['sub']);
         }
 
-        // Simplified encryption (for production, use Paseto library)
-        $nonce = random_bytes(24);
-        $encrypted = $this->encrypt($json, $nonce);
+        // Set token type
+        if (isset($payload['type'])) {
+            $builder->setClaims(['type' => $payload['type']]);
+        }
 
-        return self::HEADER . Crypto::base64UrlEncode($nonce . $encrypted);
+        // Set additional data
+        if (isset($payload['data']) && is_array($payload['data'])) {
+            $builder->setClaims(['data' => $payload['data']]);
+        }
+
+        // Add any other custom claims
+        foreach ($payload as $key => $value) {
+            if (!in_array($key, ['sub', 'type', 'data', 'iat', 'exp', 'iss'], true)) {
+                $builder->setClaims([$key => $value]);
+            }
+        }
+
+        return $builder->toString();
     }
 
+    /**
+     * Verify and decode a Paseto V4 token.
+     *
+     * @throws InvalidTokenException If token is invalid
+     * @throws TokenExpiredException If token has expired
+     */
     public function verify(string $token): ?array
     {
-        if (!str_starts_with($token, self::HEADER)) {
-            return null;
-        }
-
-        $data = Crypto::base64UrlDecode(substr($token, strlen(self::HEADER)));
-        if ($data === false || strlen($data) < 24) {
-            return null;
-        }
-
-        $nonce = substr($data, 0, 24);
-        $encrypted = substr($data, 24);
-
         try {
-            $json = $this->decrypt($encrypted, $nonce);
-            $payload = json_decode($json, true);
+            $parser = Parser::getLocal($this->key, ProtocolCollection::v4())
+                ->addRule(new NotExpired())
+                ->addRule(new IssuedBy($this->issuer));
 
-            if (!is_array($payload)) {
-                return null;
+            $parsedToken = $parser->parse($token);
+            $claims = $parsedToken->getClaims();
+
+            // Convert to standard format
+            return [
+                'sub' => $claims['sub'] ?? '',
+                'iat' => isset($claims['iat']) ? strtotime($claims['iat']) : time(),
+                'exp' => isset($claims['exp']) ? strtotime($claims['exp']) : time(),
+                'type' => $claims['type'] ?? 'access',
+                'data' => $claims['data'] ?? null,
+            ] + $claims;
+
+        } catch (PasetoException $e) {
+            // Check if it's an expiration error
+            if (str_contains($e->getMessage(), 'expired') || str_contains($e->getMessage(), 'Expir')) {
+                throw new TokenExpiredException('Token has expired');
             }
 
-            // Check expiration
-            if (isset($payload['exp']) && $payload['exp'] < time()) {
-                return null;
-            }
-
-            return $payload;
+            return null;
         } catch (\Exception) {
             return null;
         }
     }
 
+    /**
+     * Decode a token without verification (for inspection only).
+     * WARNING: Do not trust the data from this method for authentication!
+     */
     public function decode(string $token): ?array
     {
-        // For this simplified version, decode is the same as verify but without expiration check
-        if (!str_starts_with($token, self::HEADER)) {
-            return null;
-        }
-
-        $data = Crypto::base64UrlDecode(substr($token, strlen(self::HEADER)));
-        if ($data === false || strlen($data) < 24) {
-            return null;
-        }
-
-        $nonce = substr($data, 0, 24);
-        $encrypted = substr($data, 24);
-
         try {
-            $json = $this->decrypt($encrypted, $nonce);
+            // Parse without validation rules to just decode
+            $parser = Parser::getLocal($this->key, ProtocolCollection::v4());
+            $parsedToken = $parser->parse($token);
+            $claims = $parsedToken->getClaims();
 
-            return json_decode($json, true) ?: null;
+            return [
+                'sub' => $claims['sub'] ?? '',
+                'iat' => isset($claims['iat']) ? strtotime($claims['iat']) : null,
+                'exp' => isset($claims['exp']) ? strtotime($claims['exp']) : null,
+                'type' => $claims['type'] ?? 'access',
+                'data' => $claims['data'] ?? null,
+            ] + $claims;
+
         } catch (\Exception) {
             return null;
         }
     }
 
     /**
-     * Simplified encryption using XChaCha20-Poly1305.
+     * Check if a token is expired without full verification.
      */
-    private function encrypt(string $plaintext, string $nonce): string
+    public function isExpired(string $token): bool
     {
-        $key = hash('sha256', $this->secretKey, true);
-
-        if (function_exists('sodium_crypto_aead_xchacha20poly1305_ietf_encrypt')) {
-            return sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(
-                $plaintext,
-                '',
-                $nonce,
-                $key,
-            );
+        $payload = $this->decode($token);
+        if ($payload === null) {
+            return true;
         }
 
-        // Fallback to simpler encryption if libsodium not available
-        return openssl_encrypt($plaintext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, substr($nonce, 0, 12), $tag) . $tag;
-    }
-
-    /**
-     * Simplified decryption.
-     *
-     * @throws InvalidTokenException
-     */
-    private function decrypt(string $ciphertext, string $nonce): string
-    {
-        $key = hash('sha256', $this->secretKey, true);
-
-        if (function_exists('sodium_crypto_aead_xchacha20poly1305_ietf_decrypt')) {
-            $decrypted = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
-                $ciphertext,
-                '',
-                $nonce,
-                $key,
-            );
-
-            if ($decrypted === false) {
-                throw new InvalidTokenException();
-            }
-
-            return $decrypted;
-        }
-
-        // Fallback decryption
-        if (strlen($ciphertext) < 16) {
-            throw new InvalidTokenException();
-        }
-
-        $tag = substr($ciphertext, -16);
-        $ciphertext = substr($ciphertext, 0, -16);
-
-        $decrypted = openssl_decrypt(
-            $ciphertext,
-            'aes-256-gcm',
-            $key,
-            OPENSSL_RAW_DATA,
-            substr($nonce, 0, 12),
-            $tag,
-        );
-
-        if ($decrypted === false) {
-            throw new InvalidTokenException();
-        }
-
-        return $decrypted;
+        return isset($payload['exp']) && $payload['exp'] < time();
     }
 }
