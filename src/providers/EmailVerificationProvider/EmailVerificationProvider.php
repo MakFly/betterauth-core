@@ -58,14 +58,14 @@ final class EmailVerificationProvider
         $this->verificationStorage->store($token, $email, self::TOKEN_EXPIRY);
 
         // Always send email - construct verification link
-        if ($callbackUrl !== null) {
-            $separator = str_contains($callbackUrl, '?') ? '&' : '?';
-            $verificationLink = $callbackUrl . $separator . 'token=' . urlencode($token);
-        } else {
-            // Fallback: construct a basic verification link with token
-            // The frontend should handle this token via the verify endpoint
-            $verificationLink = 'http://localhost/auth/email/verify?token=' . urlencode($token);
+        if ($callbackUrl === null) {
+            // If no callbackUrl provided, throw exception - it should always be provided
+            // This prevents hardcoded URLs that won't work in Docker or different environments
+            throw new \InvalidArgumentException('callbackUrl is required for email verification. Please provide it when calling sendVerificationEmail.');
         }
+        
+        $separator = str_contains($callbackUrl, '?') ? '&' : '?';
+        $verificationLink = $callbackUrl . $separator . 'token=' . urlencode($token);
         
         $this->emailSender->sendVerificationEmail($email, $verificationLink);
 
