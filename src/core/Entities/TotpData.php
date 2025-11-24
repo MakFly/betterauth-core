@@ -6,8 +6,7 @@ namespace BetterAuth\Core\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'totp_data')]
+#[ORM\MappedSuperclass]
 class TotpData
 {
     #[ORM\Id]

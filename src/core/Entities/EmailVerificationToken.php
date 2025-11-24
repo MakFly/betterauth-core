@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Email Verification Token entity.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'email_verification_tokens')]
+#[ORM\MappedSuperclass]
 class EmailVerificationToken extends BaseToken
 {
     public static function fromArray(array $data): self

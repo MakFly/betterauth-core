@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Password Reset Token entity.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'password_reset_tokens')]
+#[ORM\MappedSuperclass]
 class PasswordResetToken extends BaseToken
 {
     public static function fromArray(array $data): self

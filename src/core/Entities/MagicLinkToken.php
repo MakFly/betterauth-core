@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Magic Link Token entity for passwordless authentication.
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'magic_link_tokens')]
+#[ORM\MappedSuperclass]
 class MagicLinkToken extends BaseToken
 {
     public static function fromArray(array $data): self
