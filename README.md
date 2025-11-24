@@ -14,7 +14,7 @@ Framework-agnostic authentication library for PHP 8.2+.
 - 🌍 **OAuth Providers**: Google, GitHub, Facebook, Microsoft, Discord
 - 👥 **Multi-tenant capabilities**: Organizations, Teams, Members, Invitations with RBAC
 - 🔒 **Secure by default**: Paseto V4 tokens, Argon2id hashing
-- 💾 **Multiple storage adapters**: PDO, Eloquent, Doctrine
+- 💾 **Multiple storage adapters**: PDO, Doctrine
 - 🎯 **Framework-agnostic core**: Use with any PHP framework
 - 🆔 **UUID v7 support**: Time-ordered, non-guessable IDs
 - 🔌 **Plugin system**: Extensible architecture
@@ -31,7 +31,6 @@ composer require betterauth/core
 BetterAuth Core is framework-agnostic with official integrations:
 
 - **Symfony** (✅ Production Ready): [`betterauth/symfony-bundle`](https://github.com/MakFly/betterauth-symfony)
-- **Laravel** (🚧 In Development): `betterauth/laravel`
 - **Vanilla PHP**: Use this package directly with PDO storage adapters
 
 ## 🔧 Requirements
@@ -95,14 +94,6 @@ use BetterAuth\Storage\Pdo\PdoSessionRepository;
 $pdo = new PDO('mysql:host=localhost;dbname=auth', 'user', 'password');
 $userRepo = new PdoUserRepository($pdo);
 $sessionRepo = new PdoSessionRepository($pdo);
-```
-
-### Eloquent (Laravel)
-
-```php
-use BetterAuth\Storage\Eloquent\EloquentUserRepository;
-
-$userRepo = new EloquentUserRepository();
 ```
 
 ### Doctrine (Symfony)
@@ -337,7 +328,6 @@ The MIT License (MIT). Please see [LICENSE](LICENSE) file for details.
 - **GitHub**: https://github.com/MakFly/betterauth-core
 - **Issues**: https://github.com/MakFly/betterauth-core/issues
 - **Symfony Bundle**: https://github.com/MakFly/betterauth-symfony
-- **Laravel Package**: https://github.com/MakFly/betterauth-laravel
 
 ## 🙏 Credits
 

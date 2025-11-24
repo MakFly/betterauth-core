@@ -128,6 +128,21 @@ class PdoTotpStorage implements TotpStorageInterface
         ]);
     }
 
+    public function updateLast2faVerifiedAt(string $userId): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE {$this->tableName}
+            SET last_2fa_verified_at = :last_2fa_verified_at, updated_at = :updated_at
+            WHERE user_id = :user_id
+        ");
+
+        return $stmt->execute([
+            'user_id' => $userId,
+            'last_2fa_verified_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
     private function hydrateTotpSecret(array $data): array
     {
         return [
@@ -136,6 +151,7 @@ class PdoTotpStorage implements TotpStorageInterface
             'secret' => $data['secret'],
             'backup_codes' => $data['backup_codes'] ? json_decode($data['backup_codes'], true) : [],
             'enabled' => (bool) $data['enabled'],
+            'last_2fa_verified_at' => $data['last_2fa_verified_at'] ?? null,
             'created_at' => $data['created_at'],
             'updated_at' => $data['updated_at'],
         ];

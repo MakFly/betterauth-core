@@ -23,6 +23,11 @@ final class TotpProvider
 
     private readonly LoggerInterface $logger;
 
+    /**
+     * @param TotpStorageInterface $totpStorage Storage implementation (PDO or Doctrine)
+     * @param string $issuer Issuer name for TOTP QR codes
+     * @param LoggerInterface|null $logger Optional logger
+     */
     public function __construct(
         private readonly TotpStorageInterface $totpStorage,
         private readonly string $issuer = 'BetterAuth',
@@ -34,11 +39,12 @@ final class TotpProvider
     /**
      * Generate a new TOTP secret for a user.
      *
-     * @param string $userId
+     * @param string $userId The user ID for storage
+     * @param string|null $displayIdentifier The identifier to display in QR code (email or user ID). If null, uses $userId
      * @return array{secret: string, qrCode: string, qrCodeUrl?: string, manualEntryKey?: string, backupCodes: array<string>}
      * @throws \Exception
      */
-    public function generateSecret(string $userId): array
+    public function generateSecret(string $userId, ?string $displayIdentifier = null): array
     {
         $this->logger->info('Generating TOTP secret', ['user_id' => $userId]);
 
@@ -49,14 +55,15 @@ final class TotpProvider
             // Generate backup codes
             $backupCodes = $this->generateBackupCodes();
 
-            // Store the secret
+            // Store the secret (always use userId for storage)
             $this->totpStorage->store($userId, $secret, [
                 'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
                 'enabled' => false,
             ]);
 
-            // Generate QR code URL (otpauth:// URI)
-            $qrCodeUrl = $this->getQrCodeUrl($userId, $secret);
+            // Generate QR code URL (otpauth:// URI) - use displayIdentifier (email) or fallback to userId
+            $qrCodeIdentifier = $displayIdentifier ?? $userId;
+            $qrCodeUrl = $this->getQrCodeUrl($qrCodeIdentifier, $secret);
 
             $this->logger->info('TOTP secret generated successfully', [
                 'user_id' => $userId,
@@ -139,6 +146,9 @@ final class TotpProvider
         // Try verifying as TOTP code
         if ($this->verifyCode($totpData['secret'], $code)) {
             $this->logger->info('TOTP code verified successfully', ['user_id' => $userId]);
+            // Update last verification timestamp
+            /** @var \BetterAuth\Core\Interfaces\TotpStorageInterface $this->totpStorage */
+            $this->totpStorage->updateLast2faVerifiedAt($userId);
             return true;
         }
 
@@ -147,6 +157,9 @@ final class TotpProvider
 
         if ($backupCodeValid) {
             $this->logger->info('TOTP backup code used successfully', ['user_id' => $userId]);
+            // Update last verification timestamp
+            /** @var \BetterAuth\Core\Interfaces\TotpStorageInterface $this->totpStorage */
+            $this->totpStorage->updateLast2faVerifiedAt($userId);
         } else {
             $this->logger->warning('TOTP verification failed: Invalid code', ['user_id' => $userId]);
         }
@@ -156,12 +169,13 @@ final class TotpProvider
 
     /**
      * Disable TOTP for a user.
+     * Requires a backup code to disable (not a TOTP code).
      *
      * @param string $userId
-     * @param string $code Verification code required to disable
+     * @param string $backupCode Backup code required to disable
      * @return bool
      */
-    public function disable(string $userId, string $code): bool
+    public function disable(string $userId, string $backupCode): bool
     {
         $this->logger->info('TOTP disable attempt', ['user_id' => $userId]);
 
@@ -174,9 +188,9 @@ final class TotpProvider
             return false;
         }
 
-        // Verify code before disabling
-        if (!$this->verifyCode($totpData['secret'], $code)) {
-            $this->logger->warning('TOTP disable failed: Invalid code', ['user_id' => $userId]);
+        // Verify backup code before disabling
+        if (!$this->totpStorage->useBackupCode($userId, $backupCode)) {
+            $this->logger->warning('TOTP disable failed: Invalid backup code', ['user_id' => $userId]);
             return false;
         }
 
@@ -240,7 +254,7 @@ final class TotpProvider
      * Get TOTP status for a user.
      *
      * @param string $userId
-     * @return array{enabled: bool, backupCodesRemaining?: int}
+     * @return array{enabled: bool, backupCodesRemaining?: int, requires2fa?: bool, last2faVerifiedAt?: string|null}
      */
     public function getStatus(string $userId): array
     {
@@ -250,9 +264,91 @@ final class TotpProvider
             return ['enabled' => false];
         }
 
+        $lastVerified = $totpData['last_2fa_verified_at'] ?? null;
+        $requires2fa = false;
+
+        if ($totpData['enabled'] && $lastVerified) {
+            // Check if last verification was more than 24 hours ago
+            $lastVerifiedDate = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $lastVerified);
+            if ($lastVerifiedDate) {
+                $now = new \DateTimeImmutable();
+                $diff = $now->diff($lastVerifiedDate);
+                // If more than 24 hours have passed, 2FA is required
+                $requires2fa = ($diff->days > 0 || ($diff->days === 0 && $diff->h >= 24));
+            }
+        } elseif ($totpData['enabled'] && !$lastVerified) {
+            // If 2FA is enabled but never verified, require it
+            $requires2fa = true;
+        }
+
         return [
             'enabled' => $totpData['enabled'],
             'backupCodesRemaining' => count($totpData['backup_codes'] ?? []),
+            'requires2fa' => $requires2fa,
+            'last2faVerifiedAt' => $lastVerified,
+        ];
+    }
+
+    /**
+     * Check if 2FA is required for a user (once per day).
+     *
+     * @param string $userId
+     * @return bool True if 2FA is required
+     */
+    public function requires2fa(string $userId): bool
+    {
+        $status = $this->getStatus($userId);
+        return $status['requires2fa'] ?? false;
+    }
+
+    /**
+     * Reset 2FA with a backup code (when 2FA is broken).
+     * This will generate a new secret and backup codes.
+     *
+     * @param string $userId The user ID for storage
+     * @param string $backupCode The backup code to verify
+     * @param string|null $displayIdentifier The identifier to display in QR code (email or user ID). If null, uses $userId
+     * @return array{success: bool, secret?: string, qrCode?: string, manualEntryKey?: string, backupCodes?: array<string>, error?: string}
+     * @throws \Exception
+     */
+    public function resetWithBackupCode(string $userId, string $backupCode, ?string $displayIdentifier = null): array
+    {
+        $this->logger->info('TOTP reset with backup code attempt', ['user_id' => $userId]);
+
+        $totpData = $this->totpStorage->findByUserId($userId);
+
+        if ($totpData === null || !$totpData['enabled']) {
+            return ['success' => false, 'error' => 'TOTP not configured or not enabled'];
+        }
+
+        // Verify backup code
+        if (!$this->totpStorage->useBackupCode($userId, $backupCode)) {
+            $this->logger->warning('TOTP reset failed: Invalid backup code', ['user_id' => $userId]);
+            return ['success' => false, 'error' => 'Invalid backup code'];
+        }
+
+        // Generate new secret and backup codes
+        $secret = $this->generateBase32Secret();
+        $backupCodes = $this->generateBackupCodes();
+
+        // Store new secret (disabled until validated)
+        $this->totpStorage->store($userId, $secret, [
+            'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
+            'enabled' => false,
+        ]);
+
+        // Generate QR code - use displayIdentifier (email) or fallback to userId
+        $qrCodeIdentifier = $displayIdentifier ?? $userId;
+        $qrCodeUrl = $this->getQrCodeUrl($qrCodeIdentifier, $secret);
+
+        $this->logger->info('TOTP reset successfully', ['user_id' => $userId]);
+
+        return [
+            'success' => true,
+            'secret' => $secret,
+            'qrCode' => $qrCodeUrl,
+            'manualEntryKey' => $secret,
+            'backupCodes' => $backupCodes,
         ];
     }
 
@@ -337,11 +433,11 @@ final class TotpProvider
     /**
      * Get the QR code URL for TOTP setup.
      *
-     * @param string $userId
+     * @param string $identifier The identifier to display (email or user ID)
      * @param string $secret
      * @return string
      */
-    private function getQrCodeUrl(string $userId, string $secret): string
+    private function getQrCodeUrl(string $identifier, string $secret): string
     {
         $params = http_build_query([
             'secret' => $secret,
@@ -354,7 +450,7 @@ final class TotpProvider
         return sprintf(
             'otpauth://totp/%s:%s?%s',
             urlencode($this->issuer),
-            urlencode($userId),
+            urlencode($identifier),
             $params
         );
     }

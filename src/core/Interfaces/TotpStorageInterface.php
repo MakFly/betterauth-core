@@ -67,4 +67,12 @@ interface TotpStorageInterface
      * @return bool True if valid and used, false otherwise
      */
     public function useBackupCode(string $userId, string $code): bool;
+
+    /**
+     * Update the last 2FA verification timestamp.
+     *
+     * @param string $userId The user ID
+     * @return bool True if updated successfully, false otherwise
+     */
+    public function updateLast2faVerifiedAt(string $userId): bool;
 }

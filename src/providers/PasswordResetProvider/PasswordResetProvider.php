@@ -108,7 +108,7 @@ final class PasswordResetProvider
         $resetToken = $this->passwordResetStorage->findByToken($token);
 
         if ($resetToken !== null && $resetToken->isValid()) {
-            return ['valid' => true, 'email' => $resetToken->email];
+            return ['valid' => true, 'email' => $resetToken->getEmail()];
         }
 
         return ['valid' => false];
@@ -142,7 +142,7 @@ final class PasswordResetProvider
         }
 
         // Find user
-        $user = $this->userRepository->findByEmail($resetToken->email);
+        $user = $this->userRepository->findByEmail($resetToken->getEmail());
 
         if ($user === null) {
             return ['success' => false, 'error' => 'User not found'];
@@ -155,10 +155,10 @@ final class PasswordResetProvider
         $this->passwordResetStorage->markAsUsed($token);
 
         // Delete all other reset tokens for this email
-        $this->passwordResetStorage->deleteByEmail($resetToken->email);
+        $this->passwordResetStorage->deleteByEmail($resetToken->getEmail());
 
         // Clear rate limit
-        $this->rateLimiter?->clear("password_reset:{$resetToken->email}");
+        $this->rateLimiter?->clear("password_reset:{$resetToken->getEmail()}");
 
         return ['success' => true];
     }

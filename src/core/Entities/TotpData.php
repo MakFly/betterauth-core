@@ -26,6 +26,9 @@ class TotpData
     #[ORM\Column(type: 'json')]
     private array $backupCodes = [];
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $last2faVerifiedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -72,6 +75,17 @@ class TotpData
     public function setBackupCodes(array $backupCodes): self
     {
         $this->backupCodes = $backupCodes;
+        return $this;
+    }
+
+    public function getLast2faVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->last2faVerifiedAt;
+    }
+
+    public function setLast2faVerifiedAt(?\DateTimeImmutable $last2faVerifiedAt): self
+    {
+        $this->last2faVerifiedAt = $last2faVerifiedAt;
         return $this;
     }
 }
