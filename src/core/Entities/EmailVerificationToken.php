@@ -5,30 +5,25 @@ declare(strict_types=1);
 namespace BetterAuth\Core\Entities;
 
 use DateTimeImmutable;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Email verification token entity.
+ * Email Verification Token entity.
  */
-class EmailVerificationToken
+#[ORM\Entity]
+#[ORM\Table(name: 'email_verification_tokens')]
+class EmailVerificationToken extends BaseToken
 {
-    public function __construct(
-        public readonly string $token,
-        public readonly string $email,
-        public readonly DateTimeImmutable $expiresAt,
-        public readonly DateTimeImmutable $createdAt,
-        public readonly bool $used = false,
-    ) {
-    }
-
     public static function fromArray(array $data): self
     {
-        return new self(
-            token: $data['token'],
-            email: $data['email'],
-            expiresAt: new DateTimeImmutable($data['expires_at']),
-            createdAt: new DateTimeImmutable($data['created_at'] ?? 'now'),
-            used: $data['used'] ?? false,
-        );
+        $token = new self();
+        $token->setToken($data['token']);
+        $token->setEmail($data['email']);
+        $token->setExpiresAt(new DateTimeImmutable($data['expires_at']));
+        $token->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
+        $token->setUsed($data['used'] ?? false);
+        
+        return $token;
     }
 
     public function toArray(): array
@@ -40,15 +35,5 @@ class EmailVerificationToken
             'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
             'used' => $this->used,
         ];
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->expiresAt < new DateTimeImmutable();
-    }
-
-    public function isValid(): bool
-    {
-        return !$this->isExpired() && !$this->used;
     }
 }

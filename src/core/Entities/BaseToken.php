@@ -2,30 +2,32 @@
 
 declare(strict_types=1);
 
-namespace BetterAuth\Core\Doctrine;
+namespace BetterAuth\Core\Entities;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'password_reset_tokens')]
-class PasswordResetTokenEntity
+/**
+ * Base class for all authentication tokens.
+ */
+#[ORM\MappedSuperclass]
+abstract class BaseToken
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 255)]
-    private string $token;
+    protected string $token;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private string $email;
+    protected string $email;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private DateTimeImmutable $expiresAt;
+    protected DateTimeImmutable $expiresAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    private DateTimeImmutable $createdAt;
+    protected DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'boolean')]
-    private bool $used = false;
+    protected bool $used = false;
 
     public function getToken(): string
     {

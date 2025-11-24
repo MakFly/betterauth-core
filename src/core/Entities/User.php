@@ -5,57 +5,182 @@ declare(strict_types=1);
 namespace BetterAuth\Core\Entities;
 
 use DateTimeImmutable;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * User entity representing an authenticated user.
- *
- * This is a readonly immutable value object.
- * Use the repository to create modified copies.
  */
-readonly class User
+#[ORM\Entity]
+#[ORM\Table(name: 'users')]
+class User
 {
-    public function __construct(
-        public string $id,
-        public string $email,
-        public ?string $passwordHash,
-        public ?string $name,
-        public ?string $avatar,
-        public bool $emailVerified,
-        public ?DateTimeImmutable $emailVerifiedAt,
-        public DateTimeImmutable $createdAt,
-        public DateTimeImmutable $updatedAt,
-        public ?array $metadata = null,
-    ) {
+    #[ORM\Id]
+    #[ORM\Column(type: 'string', length: 36)]
+    protected string $id;
+
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    protected string $email;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    protected ?string $passwordHash = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    protected ?string $name = null;
+
+    #[ORM\Column(type: 'string', length: 500, nullable: true)]
+    protected ?string $avatar = null;
+
+    #[ORM\Column(type: 'boolean')]
+    protected bool $emailVerified = false;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    protected ?DateTimeImmutable $emailVerifiedAt = null;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    protected DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    protected DateTimeImmutable $updatedAt;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    protected ?array $metadata = null;
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function getPasswordHash(): ?string
+    {
+        return $this->passwordHash;
+    }
+
+    public function setPasswordHash(?string $passwordHash): self
+    {
+        $this->passwordHash = $passwordHash;
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): self
+    {
+        $this->avatar = $avatar;
+        return $this;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->emailVerified;
+    }
+
+    public function setEmailVerified(bool $emailVerified): self
+    {
+        $this->emailVerified = $emailVerified;
+        return $this;
+    }
+
+    public function getEmailVerifiedAt(): ?DateTimeImmutable
+    {
+        return $this->emailVerifiedAt;
+    }
+
+    public function setEmailVerifiedAt(?DateTimeImmutable $emailVerifiedAt): self
+    {
+        $this->emailVerifiedAt = $emailVerifiedAt;
+        return $this;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function getMetadata(): ?array
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(?array $metadata): self
+    {
+        $this->metadata = $metadata;
+        return $this;
     }
 
     /**
      * Create a User from an array of data.
-     *
-     * @param array<string, mixed> $data
-     * @return self
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            id: $data['id'],
-            email: $data['email'],
-            passwordHash: $data['password_hash'] ?? null,
-            name: $data['name'] ?? null,
-            avatar: $data['avatar'] ?? null,
-            emailVerified: $data['email_verified'] ?? false,
-            emailVerifiedAt: isset($data['email_verified_at'])
-                ? new DateTimeImmutable($data['email_verified_at'])
-                : null,
-            createdAt: new DateTimeImmutable($data['created_at'] ?? 'now'),
-            updatedAt: new DateTimeImmutable($data['updated_at'] ?? 'now'),
-            metadata: $data['metadata'] ?? null,
+        $user = new self();
+        $user->setId($data['id']);
+        $user->setEmail($data['email']);
+        $user->setPasswordHash($data['password_hash'] ?? null);
+        $user->setName($data['name'] ?? null);
+        $user->setAvatar($data['avatar'] ?? null);
+        $user->setEmailVerified($data['email_verified'] ?? false);
+        $user->setEmailVerifiedAt(
+            isset($data['email_verified_at']) 
+                ? new DateTimeImmutable($data['email_verified_at']) 
+                : null
         );
+        $user->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
+        $user->setUpdatedAt(new DateTimeImmutable($data['updated_at'] ?? 'now'));
+        $user->setMetadata($data['metadata'] ?? null);
+        
+        return $user;
     }
 
     /**
-     * Convert the User to an array.
-     *
-     * @return array<string, mixed>
+     * Convert to array.
      */
     public function toArray(): array
     {
@@ -71,15 +196,5 @@ readonly class User
             'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
             'metadata' => $this->metadata,
         ];
-    }
-
-    /**
-     * Check if the user has a password set.
-     *
-     * @return bool
-     */
-    public function hasPassword(): bool
-    {
-        return $this->passwordHash !== null;
     }
 }
