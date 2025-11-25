@@ -33,14 +33,17 @@ final class TokenService implements TokenSignerInterface
     private const ISSUER = 'betterauth';
 
     private SymmetricKey $key;
+    private readonly string $issuer;
 
     public function __construct(
-        private readonly string $secretKey,
-        private readonly string $issuer = self::ISSUER,
+        string $secretKey,
+        string $issuer = self::ISSUER,
     ) {
         if (strlen($secretKey) < 32) {
             throw new \InvalidArgumentException('Secret key must be at least 32 characters');
         }
+
+        $this->issuer = $issuer;
 
         // Create symmetric key from secret (32 bytes for V4)
         $keyMaterial = hash('sha256', $secretKey, true);
