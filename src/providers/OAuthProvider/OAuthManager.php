@@ -140,6 +140,24 @@ final class OAuthManager
     }
 
     /**
+     * Get list of available (configured) providers.
+     *
+     * @return string[]
+     */
+    public function getAvailableProviders(): array
+    {
+        return array_keys($this->providers);
+    }
+
+    /**
+     * Check if a provider is available.
+     */
+    public function hasProvider(string $name): bool
+    {
+        return isset($this->providers[$name]);
+    }
+
+    /**
      * Get a provider by name.
      *
      * @throws \InvalidArgumentException
@@ -147,7 +165,14 @@ final class OAuthManager
     private function getProvider(string $name): OAuthProviderInterface
     {
         if (!isset($this->providers[$name])) {
-            throw new \InvalidArgumentException("OAuth provider '$name' not found");
+            $available = empty($this->providers)
+                ? 'No OAuth providers are configured'
+                : 'Available providers: ' . implode(', ', array_keys($this->providers));
+
+            throw new \InvalidArgumentException(
+                "OAuth provider '$name' not found. $available. " .
+                "Make sure '$name' is configured with 'enabled: true' in config/packages/better_auth.yaml"
+            );
         }
 
         return $this->providers[$name];

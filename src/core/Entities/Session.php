@@ -27,7 +27,7 @@ class Session
     #[ORM\Column(type: 'string', length: 45)]
     protected string $ipAddress;
 
-    #[ORM\Column(type: 'string', length: 500)]
+    #[ORM\Column(type: 'text')]
     protected string $userAgent;
 
     #[ORM\Column(type: 'datetime_immutable')]
