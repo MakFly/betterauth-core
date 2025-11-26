@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace BetterAuth\Tests\AccountLinking;
 
 use BetterAuth\Core\Entities\AccountLink;
-use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Interfaces\AccountLinkRepositoryInterface;
+use BetterAuth\Tests\Fixtures\TestUser;
 use BetterAuth\Providers\AccountLinkProvider\AccountLinkProvider;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ class AccountLinkProviderTest extends TestCase
 
     public function testLinkAccount(): void
     {
-        $user = User::fromArray([
+        $user = TestUser::fromArray([
             'id' => 'user-123',
             'email' => 'user@example.com',
             'password_hash' => null,
@@ -81,7 +81,7 @@ class AccountLinkProviderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Provider 'google' is already linked to this user");
 
-        $user = User::fromArray([
+        $user = TestUser::fromArray([
             'id' => 'user-123',
             'email' => 'user@example.com',
             'password_hash' => null,

@@ -7,6 +7,7 @@ namespace BetterAuth\Tests\GuestSession;
 use BetterAuth\Core\Entities\GuestSession;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Interfaces\GuestSessionRepositoryInterface;
+use BetterAuth\Tests\Fixtures\TestUser;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Providers\GuestSessionProvider\GuestSessionProvider;
 use DateTimeImmutable;
@@ -110,7 +111,7 @@ class GuestSessionProviderTest extends TestCase
             ->method('generateId')
             ->willReturn('user-new-123');
 
-        $createdUser = User::fromArray([
+        $createdUser = TestUser::fromArray([
             'id' => 'user-new-123',
             'email' => 'newuser@example.com',
             'name' => 'New User',
