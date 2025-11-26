@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BetterAuth\Storage\Pdo;
 
 use BetterAuth\Core\Entities\RefreshToken;
+use BetterAuth\Core\Entities\SimpleRefreshToken;
 use BetterAuth\Core\Interfaces\RefreshTokenRepositoryInterface;
 use PDO;
 
@@ -26,7 +27,7 @@ class PdoRefreshTokenRepository implements RefreshTokenRepositoryInterface
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? RefreshToken::fromArray($data) : null;
+        return $data ? SimpleRefreshToken::fromArray($data) : null;
     }
 
     public function findByUserId(string $userId): array
@@ -40,7 +41,7 @@ class PdoRefreshTokenRepository implements RefreshTokenRepositoryInterface
 
         $tokens = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $tokens[] = RefreshToken::fromArray($data);
+            $tokens[] = SimpleRefreshToken::fromArray($data);
         }
 
         return $tokens;

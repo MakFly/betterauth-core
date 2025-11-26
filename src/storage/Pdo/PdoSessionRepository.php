@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BetterAuth\Storage\Pdo;
 
 use BetterAuth\Core\Entities\Session;
+use BetterAuth\Core\Entities\SimpleSession;
 use BetterAuth\Core\Interfaces\SessionRepositoryInterface;
 use PDO;
 
@@ -26,7 +27,7 @@ class PdoSessionRepository implements SessionRepositoryInterface
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? Session::fromArray($data) : null;
+        return $data ? SimpleSession::fromArray($data) : null;
     }
 
     public function findByUserId(string $userId): array
@@ -40,7 +41,7 @@ class PdoSessionRepository implements SessionRepositoryInterface
 
         $sessions = [];
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $sessions[] = Session::fromArray($data);
+            $sessions[] = SimpleSession::fromArray($data);
         }
 
         return $sessions;

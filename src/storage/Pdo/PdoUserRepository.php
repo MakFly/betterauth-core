@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BetterAuth\Storage\Pdo;
 
+use BetterAuth\Core\Entities\SimpleUser;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use PDO;
@@ -27,7 +28,7 @@ class PdoUserRepository implements UserRepositoryInterface
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? User::fromArray($data) : null;
+        return $data ? SimpleUser::fromArray($data) : null;
     }
 
     public function findByEmail(string $email): ?User
@@ -37,7 +38,7 @@ class PdoUserRepository implements UserRepositoryInterface
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? User::fromArray($data) : null;
+        return $data ? SimpleUser::fromArray($data) : null;
     }
 
     public function findByProvider(string $provider, string $providerId): ?User
@@ -50,7 +51,7 @@ class PdoUserRepository implements UserRepositoryInterface
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? User::fromArray($data) : null;
+        return $data ? SimpleUser::fromArray($data) : null;
     }
 
     public function create(array $data): User
