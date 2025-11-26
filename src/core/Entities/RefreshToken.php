@@ -8,18 +8,18 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * RefreshToken entity for JWT token refresh.
+ * Base RefreshToken entity for BetterAuth.
+ *
+ * This MappedSuperclass does NOT define the userId type - the child class must define it.
+ * This allows flexibility between UUID (string) and INT (integer) user ID strategies.
  */
 #[ORM\MappedSuperclass]
 #[ORM\HasLifecycleCallbacks]
-class RefreshToken
+abstract class RefreshToken
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 255)]
     protected string $token;
-
-    #[ORM\Column(type: 'string', length: 36)]
-    protected string $userId;
 
     #[ORM\Column(type: 'datetime_immutable')]
     protected DateTimeImmutable $expiresAt;
@@ -33,26 +33,31 @@ class RefreshToken
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected ?string $replacedBy = null;
 
+    public function __construct()
+    {
+        $this->createdAt = new DateTimeImmutable();
+    }
+
+    /**
+     * Get the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function getUserId(): string|int;
+
+    /**
+     * Set the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function setUserId(string|int $userId): static;
+
     public function getToken(): string
     {
         return $this->token;
     }
 
-    public function setToken(string $token): self
+    public function setToken(string $token): static
     {
         $this->token = $token;
-
-        return $this;
-    }
-
-    public function getUserId(): string
-    {
-        return $this->userId;
-    }
-
-    public function setUserId(string $userId): self
-    {
-        $this->userId = $userId;
 
         return $this;
     }
@@ -62,7 +67,7 @@ class RefreshToken
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(DateTimeImmutable $expiresAt): self
+    public function setExpiresAt(DateTimeImmutable $expiresAt): static
     {
         $this->expiresAt = $expiresAt;
 
@@ -74,7 +79,7 @@ class RefreshToken
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): self
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -86,7 +91,7 @@ class RefreshToken
         return $this->revoked;
     }
 
-    public function setRevoked(bool $revoked): self
+    public function setRevoked(bool $revoked): static
     {
         $this->revoked = $revoked;
 
@@ -98,7 +103,7 @@ class RefreshToken
         return $this->replacedBy;
     }
 
-    public function setReplacedBy(?string $replacedBy): self
+    public function setReplacedBy(?string $replacedBy): static
     {
         $this->replacedBy = $replacedBy;
 
@@ -111,31 +116,6 @@ class RefreshToken
     public function isValid(): bool
     {
         return !$this->revoked && $this->expiresAt > new DateTimeImmutable();
-    }
-
-    public static function fromArray(array $data): self
-    {
-        $token = new self();
-        $token->setToken($data['token']);
-        $token->setUserId($data['user_id']);
-        $token->setExpiresAt(new DateTimeImmutable($data['expires_at']));
-        $token->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
-        $token->setRevoked($data['revoked'] ?? false);
-        $token->setReplacedBy($data['replaced_by'] ?? null);
-
-        return $token;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'token' => $this->token,
-            'user_id' => $this->userId,
-            'expires_at' => $this->expiresAt->format('Y-m-d H:i:s'),
-            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
-            'revoked' => $this->revoked,
-            'replaced_by' => $this->replacedBy,
-        ];
     }
 
     #[ORM\PrePersist]

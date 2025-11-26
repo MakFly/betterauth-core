@@ -6,23 +6,51 @@ namespace BetterAuth\Core\Entities;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * User entity representing an authenticated user.
+ * Base User entity for BetterAuth.
+ *
+ * This MappedSuperclass does NOT define the ID - the child class must define it.
+ * This allows flexibility between UUID (string) and INT (integer) strategies.
+ *
+ * Implements Symfony Security interfaces for seamless integration.
+ *
+ * @example UUID strategy:
+ * ```php
+ * #[ORM\Entity]
+ * class User extends BaseUser {
+ *     #[ORM\Id]
+ *     #[ORM\Column(type: 'string', length: 36)]
+ *     protected string $id;
+ * }
+ * ```
+ *
+ * @example INT strategy:
+ * ```php
+ * #[ORM\Entity]
+ * class User extends BaseUser {
+ *     #[ORM\Id]
+ *     #[ORM\GeneratedValue]
+ *     #[ORM\Column(type: 'integer')]
+ *     protected ?int $id = null;
+ * }
+ * ```
  */
 #[ORM\MappedSuperclass]
 #[ORM\HasLifecycleCallbacks]
-class User
+abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
-    protected string $id;
-
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     protected string $email;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    protected ?string $passwordHash = null;
+    protected ?string $password = null;
+
+    /** @var string[] */
+    #[ORM\Column(type: 'json')]
+    protected array $roles = ['ROLE_USER'];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     protected ?string $name = null;
@@ -45,40 +73,91 @@ class User
     #[ORM\Column(type: 'json', nullable: true)]
     protected ?array $metadata = null;
 
-    public function getId(): string
+    public function __construct()
     {
-        return $this->id;
+        $this->createdAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable();
     }
 
-    public function setId(string $id): self
-    {
-        $this->id = $id;
+    /**
+     * Get the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function getId(): string|int|null;
 
-        return $this;
-    }
+    /**
+     * Set the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function setId(string|int $id): static;
 
     public function getEmail(): string
     {
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(string $email): static
     {
         $this->email = $email;
 
         return $this;
     }
 
-    public function getPasswordHash(): ?string
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): ?string
     {
-        return $this->passwordHash;
+        return $this->password;
     }
 
-    public function setPasswordHash(?string $passwordHash): self
+    public function setPassword(?string $password): static
     {
-        $this->passwordHash = $passwordHash;
+        $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * The public representation of the user (e.g. a username, an email address, etc.)
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     *
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // Guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param string[] $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
     }
 
     public function getName(): ?string
@@ -86,7 +165,7 @@ class User
         return $this->name;
     }
 
-    public function setName(?string $name): self
+    public function setName(?string $name): static
     {
         $this->name = $name;
 
@@ -98,7 +177,7 @@ class User
         return $this->avatar;
     }
 
-    public function setAvatar(?string $avatar): self
+    public function setAvatar(?string $avatar): static
     {
         $this->avatar = $avatar;
 
@@ -110,7 +189,7 @@ class User
         return $this->emailVerified;
     }
 
-    public function setEmailVerified(bool $emailVerified): self
+    public function setEmailVerified(bool $emailVerified): static
     {
         $this->emailVerified = $emailVerified;
 
@@ -122,7 +201,7 @@ class User
         return $this->emailVerifiedAt;
     }
 
-    public function setEmailVerifiedAt(?DateTimeImmutable $emailVerifiedAt): self
+    public function setEmailVerifiedAt(?DateTimeImmutable $emailVerifiedAt): static
     {
         $this->emailVerifiedAt = $emailVerifiedAt;
 
@@ -134,7 +213,7 @@ class User
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): self
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -146,7 +225,7 @@ class User
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): self
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
 
@@ -158,7 +237,7 @@ class User
         return $this->metadata;
     }
 
-    public function setMetadata(?array $metadata): self
+    public function setMetadata(?array $metadata): static
     {
         $this->metadata = $metadata;
 
@@ -166,54 +245,11 @@ class User
     }
 
     /**
-     * Create a User from an array of data.
-     */
-    public static function fromArray(array $data): self
-    {
-        $user = new self();
-        $user->setId($data['id']);
-        $user->setEmail($data['email']);
-        $user->setPasswordHash($data['password_hash'] ?? null);
-        $user->setName($data['name'] ?? null);
-        $user->setAvatar($data['avatar'] ?? null);
-        $user->setEmailVerified($data['email_verified'] ?? false);
-        $user->setEmailVerifiedAt(
-            isset($data['email_verified_at'])
-                ? new DateTimeImmutable($data['email_verified_at'])
-                : null,
-        );
-        $user->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
-        $user->setUpdatedAt(new DateTimeImmutable($data['updated_at'] ?? 'now'));
-        $user->setMetadata($data['metadata'] ?? null);
-
-        return $user;
-    }
-
-    /**
-     * Convert to array.
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'email' => $this->email,
-            'password_hash' => $this->passwordHash,
-            'name' => $this->name,
-            'avatar' => $this->avatar,
-            'email_verified' => $this->emailVerified,
-            'email_verified_at' => $this->emailVerifiedAt?->format('Y-m-d H:i:s'),
-            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
-            'metadata' => $this->metadata,
-        ];
-    }
-
-    /**
-     * Check if user has a password (for Magic Link users who might not have one)
+     * Check if user has a password (for Magic Link users who might not have one).
      */
     public function hasPassword(): bool
     {
-        return $this->passwordHash !== null && $this->passwordHash !== '';
+        return $this->password !== null && $this->password !== '';
     }
 
     #[ORM\PrePersist]

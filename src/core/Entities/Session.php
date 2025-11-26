@@ -8,18 +8,18 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Session entity representing a user session.
+ * Base Session entity for BetterAuth.
+ *
+ * This MappedSuperclass does NOT define the userId type - the child class must define it.
+ * This allows flexibility between UUID (string) and INT (integer) user ID strategies.
  */
 #[ORM\MappedSuperclass]
 #[ORM\HasLifecycleCallbacks]
-class Session
+abstract class Session
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 255)]
     protected string $token;
-
-    #[ORM\Column(type: 'string', length: 36)]
-    protected string $userId;
 
     #[ORM\Column(type: 'datetime_immutable')]
     protected DateTimeImmutable $expiresAt;
@@ -39,32 +39,32 @@ class Session
     #[ORM\Column(type: 'json', nullable: true)]
     protected ?array $metadata = null;
 
-    #[ORM\Column(type: 'string', length: 36, nullable: true)]
-    protected ?string $activeOrganizationId = null;
+    public function __construct()
+    {
+        $this->createdAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable();
+    }
 
-    #[ORM\Column(type: 'string', length: 36, nullable: true)]
-    protected ?string $activeTeamId = null;
+    /**
+     * Get the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function getUserId(): string|int;
+
+    /**
+     * Set the user ID.
+     * Must be implemented by child class based on ID strategy.
+     */
+    abstract public function setUserId(string|int $userId): static;
 
     public function getToken(): string
     {
         return $this->token;
     }
 
-    public function setToken(string $token): self
+    public function setToken(string $token): static
     {
         $this->token = $token;
-
-        return $this;
-    }
-
-    public function getUserId(): string
-    {
-        return $this->userId;
-    }
-
-    public function setUserId(string $userId): self
-    {
-        $this->userId = $userId;
 
         return $this;
     }
@@ -74,7 +74,7 @@ class Session
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(DateTimeImmutable $expiresAt): self
+    public function setExpiresAt(DateTimeImmutable $expiresAt): static
     {
         $this->expiresAt = $expiresAt;
 
@@ -86,7 +86,7 @@ class Session
         return $this->ipAddress;
     }
 
-    public function setIpAddress(string $ipAddress): self
+    public function setIpAddress(string $ipAddress): static
     {
         $this->ipAddress = $ipAddress;
 
@@ -98,7 +98,7 @@ class Session
         return $this->userAgent;
     }
 
-    public function setUserAgent(string $userAgent): self
+    public function setUserAgent(string $userAgent): static
     {
         $this->userAgent = $userAgent;
 
@@ -110,7 +110,7 @@ class Session
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): self
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -122,7 +122,7 @@ class Session
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): self
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
 
@@ -134,72 +134,15 @@ class Session
         return $this->metadata;
     }
 
-    public function setMetadata(?array $metadata): self
+    public function setMetadata(?array $metadata): static
     {
         $this->metadata = $metadata;
 
         return $this;
     }
 
-    public function getActiveOrganizationId(): ?string
-    {
-        return $this->activeOrganizationId;
-    }
-
-    public function setActiveOrganizationId(?string $activeOrganizationId): self
-    {
-        $this->activeOrganizationId = $activeOrganizationId;
-
-        return $this;
-    }
-
-    public function getActiveTeamId(): ?string
-    {
-        return $this->activeTeamId;
-    }
-
-    public function setActiveTeamId(?string $activeTeamId): self
-    {
-        $this->activeTeamId = $activeTeamId;
-
-        return $this;
-    }
-
-    public static function fromArray(array $data): self
-    {
-        $session = new self();
-        $session->setToken($data['token']);
-        $session->setUserId($data['user_id']);
-        $session->setExpiresAt(new DateTimeImmutable($data['expires_at']));
-        $session->setIpAddress($data['ip_address']);
-        $session->setUserAgent($data['user_agent']);
-        $session->setCreatedAt(new DateTimeImmutable($data['created_at'] ?? 'now'));
-        $session->setUpdatedAt(new DateTimeImmutable($data['updated_at'] ?? 'now'));
-        $session->setMetadata($data['metadata'] ?? null);
-        $session->setActiveOrganizationId($data['active_organization_id'] ?? null);
-        $session->setActiveTeamId($data['active_team_id'] ?? null);
-
-        return $session;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'token' => $this->token,
-            'user_id' => $this->userId,
-            'expires_at' => $this->expiresAt->format('Y-m-d H:i:s'),
-            'ip_address' => $this->ipAddress,
-            'user_agent' => $this->userAgent,
-            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
-            'metadata' => $this->metadata,
-            'active_organization_id' => $this->activeOrganizationId,
-            'active_team_id' => $this->activeTeamId,
-        ];
-    }
-
     /**
-     * Check if the session has expired
+     * Check if the session has expired.
      */
     public function isExpired(): bool
     {

@@ -145,8 +145,8 @@ final class SessionAuthManager
             throw new InvalidCredentialsException();
         }
 
-        // After hasPassword() check, passwordHash is guaranteed to be non-null
-        $passwordHash = $user->getPasswordHash();
+        // After hasPassword() check, password is guaranteed to be non-null
+        $passwordHash = $user->getPassword();
         assert($passwordHash !== null);
 
         if (!$this->passwordHasher->verify($password, $passwordHash)) {
