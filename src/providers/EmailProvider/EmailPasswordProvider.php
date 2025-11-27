@@ -36,7 +36,7 @@ final class EmailPasswordProvider
     /**
      * Sign in with email and password.
      *
-     * @return array{user: User, session: Session}
+     * @return array{user: array<string, mixed>, session: Session}
      *
      * @throws \Exception
      */

@@ -108,7 +108,7 @@ final class SessionAuthManager implements SessionAuthManagerInterface
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      *
-     * @return array{user: User, session: Session} The user and session
+     * @return array{user: array<string, mixed>, session: Session} The user DTO array and session
      *
      * @throws InvalidCredentialsException
      * @throws RateLimitException
@@ -183,7 +183,7 @@ final class SessionAuthManager implements SessionAuthManagerInterface
             ]);
 
             return [
-                'user' => $user,
+                'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 'session' => $session,
             ];
         } catch (\Exception $e) {

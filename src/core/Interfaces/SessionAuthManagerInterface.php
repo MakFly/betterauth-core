@@ -25,7 +25,7 @@ interface SessionAuthManagerInterface
     /**
      * Authenticate a user with email and password.
      *
-     * @return array{user: User, session: \BetterAuth\Core\Entities\Session}
+     * @return array{user: array<string, mixed>, session: \BetterAuth\Core\Entities\Session}
      *
      * @throws \BetterAuth\Core\Exceptions\InvalidCredentialsException
      * @throws \BetterAuth\Core\Exceptions\RateLimitException

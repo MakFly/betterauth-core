@@ -323,7 +323,7 @@ final class AuthManager implements AuthManagerInterface
             $session = $sessionService->create($user, $ipAddress, $userAgent);
 
             return [
-                'user' => $user,
+                'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 'session' => $session,
                 'sessionToken' => $session->getToken(),
             ];

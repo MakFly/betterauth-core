@@ -149,7 +149,7 @@ final class PasskeyProvider
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      *
-     * @return array{user: User, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string}
+     * @return array{user: array<string, mixed>, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string}
      *
      * @throws InvalidCredentialsException
      * @throws \Exception
@@ -194,7 +194,7 @@ final class PasskeyProvider
             $tokens = $this->tokenManager->create($user);
 
             return [
-                'user' => $user,
+                'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 'access_token' => $tokens['access_token'],
                 'refresh_token' => $tokens['refresh_token'],
                 'token_type' => $tokens['token_type'],
@@ -206,7 +206,7 @@ final class PasskeyProvider
         $session = $this->sessionService->create($user, $ipAddress, $userAgent);
 
         return [
-            'user' => $user,
+            'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
             'session' => $session,
         ];
     }

@@ -123,7 +123,7 @@ final class MagicLinkProvider
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      *
-     * @return array{success: bool, error?: string, access_token?: string, refresh_token?: string, expires_in?: int, user?: User} Result of verification
+     * @return array{success: bool, error?: string, access_token?: string, refresh_token?: string, expires_in?: int, user?: array<string, mixed>} Result of verification
      *
      * @throws \Exception
      */
@@ -210,7 +210,7 @@ final class MagicLinkProvider
                     'refresh_token' => $tokens['refresh_token'],
                     'expires_in' => $tokens['expires_in'],
                     'token_type' => $tokens['token_type'],
-                    'user' => $user,
+                    'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 ];
             } else {
                 // Session mode: Create database session (stateful)
@@ -234,7 +234,7 @@ final class MagicLinkProvider
                     'access_token' => $session->getToken(),
                     'refresh_token' => $session->getToken(), // Using session token as both
                     'expires_in' => 604800, // 7 days default
-                    'user' => $user,
+                    'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 ];
             }
         } catch (\Exception $e) {
