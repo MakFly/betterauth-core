@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BetterAuth\Core;
 
 use BetterAuth\Core\Config\AuthConfig;
+use BetterAuth\Core\DTO\UserDto;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Exceptions\InvalidCredentialsException;
 use BetterAuth\Core\Exceptions\InvalidTokenException;
@@ -309,7 +310,7 @@ final class TokenAuthManager implements TokenAuthManagerInterface
             ]);
 
             return [
-                'user' => $user,
+                'user' => UserDto::fromUser($user)->toArray(),
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken->getToken(),
                 'token_type' => 'Bearer',

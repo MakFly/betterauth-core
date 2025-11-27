@@ -16,14 +16,14 @@ interface TokenAuthManagerInterface
     /**
      * Authenticate and return access + refresh tokens.
      *
-     * @return array{user: User, access_token: string, refresh_token: string, token_type: string, expires_in: int}
+     * @return array{user: array<string, mixed>, access_token: string, refresh_token: string, token_type: string, expires_in: int}
      */
     public function signIn(string $email, string $password): array;
 
     /**
      * Refresh access token using refresh token.
      *
-     * @return array{user: User, access_token: string, refresh_token: string, token_type: string, expires_in: int}
+     * @return array{user: array<string, mixed>, access_token: string, refresh_token: string, token_type: string, expires_in: int}
      */
     public function refresh(string $refreshTokenValue): array;
 
@@ -41,7 +41,7 @@ interface TokenAuthManagerInterface
      * Create tokens for an existing user without password verification.
      * Useful for OAuth, magic links, or automatic login after registration.
      *
-     * @return array{user: User, access_token: string, refresh_token: string, token_type: string, expires_in: int}
+     * @return array{user: array<string, mixed>, access_token: string, refresh_token: string, token_type: string, expires_in: int}
      */
     public function createTokensForUser(User $user): array;
 

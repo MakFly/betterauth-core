@@ -141,7 +141,7 @@ final class OAuthManager
             $tokens = $this->tokenManager->create($user);
 
             return [
-                'user' => $user,
+                'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
                 'access_token' => $tokens['access_token'],
                 'refresh_token' => $tokens['refresh_token'],
                 'token_type' => $tokens['token_type'],
@@ -154,7 +154,7 @@ final class OAuthManager
         $session = $this->sessionService->create($user, $ipAddress, $userAgent);
 
         return [
-            'user' => $user,
+            'user' => \BetterAuth\Core\DTO\UserDto::fromUser($user)->toArray(),
             'session' => $session,
             'isNewUser' => $isNewUser,
         ];
