@@ -100,4 +100,24 @@ final class EmailVerificationProvider
 
         return ['success' => true];
     }
+
+    /**
+     * Resend verification email by email address.
+     *
+     * @param string $email The email address
+     * @param string|null $callbackUrl Optional callback URL for the verification link
+     *
+     * @return array{success: bool, expiresIn?: int} Result with expiration time
+     */
+    public function resendVerificationEmail(string $email, ?string $callbackUrl = null): array
+    {
+        $user = $this->userRepository->findByEmail($email);
+
+        // Don't reveal if user exists (security best practice)
+        if ($user === null || $user->isEmailVerified()) {
+            return ['success' => true];
+        }
+
+        return $this->sendVerificationEmail($user->getId(), $email, $callbackUrl);
+    }
 }

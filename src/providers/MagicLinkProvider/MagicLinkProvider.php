@@ -248,4 +248,26 @@ final class MagicLinkProvider
             throw $e;
         }
     }
+
+    /**
+     * Check if a magic link token is valid without consuming it.
+     *
+     * @param string $token The magic link token
+     *
+     * @return array{valid: bool, email?: string, expires_at?: int} Token status
+     */
+    public function checkToken(string $token): array
+    {
+        $magicLinkToken = $this->magicLinkStorage->findByToken($token);
+
+        if ($magicLinkToken === null || !$magicLinkToken->isValid()) {
+            return ['valid' => false];
+        }
+
+        return [
+            'valid' => true,
+            'email' => $magicLinkToken->getEmail(),
+            'expires_at' => $magicLinkToken->getExpiresAt()->getTimestamp(),
+        ];
+    }
 }
