@@ -10,6 +10,7 @@ use BetterAuth\Core\Exceptions\InvalidCredentialsException;
 use BetterAuth\Core\Exceptions\RateLimitException;
 use BetterAuth\Core\Exceptions\UserNotFoundException;
 use BetterAuth\Core\Interfaces\RateLimiterInterface;
+use BetterAuth\Core\Interfaces\SessionAuthManagerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -24,7 +25,7 @@ use Psr\Log\NullLogger;
  *
  * This class is final to ensure consistent session authentication behavior.
  */
-final class SessionAuthManager
+final class SessionAuthManager implements SessionAuthManagerInterface
 {
     private readonly LoggerInterface $logger;
 

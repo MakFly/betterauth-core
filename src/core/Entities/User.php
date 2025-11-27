@@ -27,7 +27,6 @@ use Symfony\Component\Serializer\Annotation\Ignore;
  *     protected string $id;
  * }
  * ```
- *
  * @example INT strategy:
  * ```php
  * #[ORM\Entity]
@@ -106,6 +105,7 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @see PasswordAuthenticatedUserInterface
+     *
      * @Ignore()
      */
     public function getPassword(): ?string

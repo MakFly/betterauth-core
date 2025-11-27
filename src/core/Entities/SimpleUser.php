@@ -86,7 +86,10 @@ class SimpleUser extends User
     }
 
     /**
-     * Convert to array for storage.
+     * Convert to array for database storage.
+     *
+     * WARNING: This includes password_hash and should NEVER be sent in API responses.
+     * Use toApiArray() or UserDto for API responses.
      */
     public function toArray(): array
     {
@@ -103,5 +106,45 @@ class SimpleUser extends User
             'updated_at' => $this->getUpdatedAt()->format('Y-m-d H:i:s'),
             'metadata' => $this->getMetadata(),
         ];
+    }
+
+    /**
+     * Convert to array safe for API responses (excludes sensitive data).
+     *
+     * @param string[] $includeFields Additional fields to include
+     * @param string[] $excludeFields Additional fields to exclude
+     */
+    public function toApiArray(array $includeFields = [], array $excludeFields = []): array
+    {
+        $data = [
+            'id' => $this->getId(),
+            'email' => $this->getEmail(),
+            'name' => $this->getName(),
+            'avatar' => $this->getAvatar(),
+            'roles' => $this->getRoles(),
+            'emailVerified' => $this->isEmailVerified(),
+            'emailVerifiedAt' => $this->getEmailVerifiedAt()?->format(\DateTimeInterface::ATOM),
+            'createdAt' => $this->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'updatedAt' => $this->getUpdatedAt()->format(\DateTimeInterface::ATOM),
+        ];
+
+        // Add metadata if not excluded
+        if (!in_array('metadata', $excludeFields, true)) {
+            $data['metadata'] = $this->getMetadata();
+        }
+
+        // Add optional fields if explicitly requested
+        foreach ($includeFields as $field) {
+            if ($field === 'password' && !in_array('password', $excludeFields, true)) {
+                $data['password'] = $this->getPassword();
+            }
+        }
+
+        // Remove excluded fields
+        foreach ($excludeFields as $field) {
+            unset($data[$field]);
+        }
+
+        return $data;
     }
 }

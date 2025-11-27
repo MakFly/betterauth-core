@@ -22,6 +22,12 @@ enum AuthMode: string
     case API = 'api';
 
     /**
+     * Hybrid mode - Both session-based and token-based auth.
+     * Best for: Apps with both web frontend and mobile/SPA clients
+     */
+    case HYBRID = 'hybrid';
+
+    /**
      * Check if current mode is monolith.
      */
     public function isMonolith(): bool
@@ -35,5 +41,31 @@ enum AuthMode: string
     public function isApi(): bool
     {
         return $this === self::API;
+    }
+
+    /**
+     * Check if current mode is hybrid.
+     */
+    public function isHybrid(): bool
+    {
+        return $this === self::HYBRID;
+    }
+
+    /**
+     * Check if this mode supports token-based authentication.
+     * API and HYBRID modes support tokens.
+     */
+    public function supportsTokens(): bool
+    {
+        return $this !== self::MONOLITH;
+    }
+
+    /**
+     * Check if this mode supports session-based authentication.
+     * MONOLITH and HYBRID modes support sessions.
+     */
+    public function supportsSessions(): bool
+    {
+        return $this !== self::API;
     }
 }

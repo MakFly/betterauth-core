@@ -6,8 +6,8 @@ namespace BetterAuth\Tests\AccountLinking;
 
 use BetterAuth\Core\Entities\AccountLink;
 use BetterAuth\Core\Interfaces\AccountLinkRepositoryInterface;
-use BetterAuth\Tests\Fixtures\TestUser;
 use BetterAuth\Providers\AccountLinkProvider\AccountLinkProvider;
+use BetterAuth\Tests\Fixtures\TestUser;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 

@@ -13,7 +13,6 @@ use ParagonIE\Paseto\Keys\SymmetricKey;
 use ParagonIE\Paseto\Parser;
 use ParagonIE\Paseto\Protocol\Version4;
 use ParagonIE\Paseto\ProtocolCollection;
-use ParagonIE\Paseto\Purpose;
 use ParagonIE\Paseto\Rules\IssuedBy;
 use ParagonIE\Paseto\Rules\NotExpired;
 

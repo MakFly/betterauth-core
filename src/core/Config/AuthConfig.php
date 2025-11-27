@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace BetterAuth\Core\Config;
 
 /**
- * Authentication configuration supporting both monolith and API modes.
+ * Authentication configuration supporting monolith, API, and hybrid modes.
  */
 class AuthConfig
 {
@@ -63,6 +63,27 @@ class AuthConfig
     }
 
     /**
+     * Create config for hybrid mode (both sessions and tokens).
+     * Best for apps with web frontend + mobile/SPA clients.
+     */
+    public static function forHybrid(string $secretKey, array $overrides = []): self
+    {
+        $defaults = [
+            'mode' => AuthMode::HYBRID,
+            'secretKey' => $secretKey,
+            'sessionLifetime' => 604800, // 7 days for sessions
+            'tokenLifetime' => 3600, // 1 hour for API tokens
+            'enableRefreshTokens' => true, // Needed for API clients
+            'cookieHttpOnly' => true, // Sessions use cookies
+            'cookieSecure' => true,
+        ];
+
+        $params = array_merge($defaults, $overrides);
+
+        return new self(...$params);
+    }
+
+    /**
      * Check if mode is monolith.
      */
     public function isMonolith(): bool
@@ -76,5 +97,29 @@ class AuthConfig
     public function isApi(): bool
     {
         return $this->mode->isApi();
+    }
+
+    /**
+     * Check if mode is hybrid.
+     */
+    public function isHybrid(): bool
+    {
+        return $this->mode->isHybrid();
+    }
+
+    /**
+     * Check if this mode supports token-based authentication.
+     */
+    public function supportsTokens(): bool
+    {
+        return $this->mode->supportsTokens();
+    }
+
+    /**
+     * Check if this mode supports session-based authentication.
+     */
+    public function supportsSessions(): bool
+    {
+        return $this->mode->supportsSessions();
     }
 }

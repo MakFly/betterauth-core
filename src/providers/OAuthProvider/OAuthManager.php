@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\OAuthProvider;
 
+use BetterAuth\Core\Config\AuthConfig;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Interfaces\OAuthProviderInterface;
+use BetterAuth\Core\Interfaces\TokenManagerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\SessionService;
 use BetterAuth\Core\Utils\Crypto;
 
 /**
  * OAuth manager for handling OAuth authentication flow.
+ * Supports both session-based (monolith) and token-based (API/hybrid) authentication modes.
  *
  * This manager is final to ensure consistent OAuth behavior.
  */
@@ -24,6 +27,8 @@ final class OAuthManager
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly SessionService $sessionService,
+        private readonly ?AuthConfig $authConfig = null,
+        private readonly ?TokenManagerInterface $tokenManager = null,
     ) {
     }
 
@@ -60,7 +65,9 @@ final class OAuthManager
     /**
      * Handle OAuth callback and create/login user.
      *
-     * @return array{user: User, session: Session, isNewUser: bool}
+     * Returns tokens in API/hybrid mode, session in monolith mode.
+     *
+     * @return array{user: User, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string, isNewUser: bool}
      *
      * @throws \Exception
      */
@@ -129,7 +136,21 @@ final class OAuthManager
             }
         }
 
-        // Create session
+        // API/Hybrid mode: Return JWT tokens
+        if ($this->authConfig?->supportsTokens() && $this->tokenManager !== null) {
+            $tokens = $this->tokenManager->create($user);
+
+            return [
+                'user' => $user,
+                'access_token' => $tokens['access_token'],
+                'refresh_token' => $tokens['refresh_token'],
+                'token_type' => $tokens['token_type'],
+                'expires_in' => $tokens['expires_in'],
+                'isNewUser' => $isNewUser,
+            ];
+        }
+
+        // Session mode (default): Create session
         $session = $this->sessionService->create($user, $ipAddress, $userAgent);
 
         return [
@@ -171,7 +192,7 @@ final class OAuthManager
 
             throw new \InvalidArgumentException(
                 "OAuth provider '$name' not found. $available. " .
-                "Make sure '$name' is configured with 'enabled: true' in config/packages/better_auth.yaml"
+                "Make sure '$name' is configured with 'enabled: true' in config/packages/better_auth.yaml",
             );
         }
 

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace BetterAuth\Providers\PasskeyProvider;
 
+use BetterAuth\Core\Config\AuthConfig;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Exceptions\InvalidCredentialsException;
 use BetterAuth\Core\Interfaces\PasskeyStorageInterface;
+use BetterAuth\Core\Interfaces\TokenManagerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\SessionService;
 use BetterAuth\Core\Utils\Crypto;
 
 /**
  * Passkey/WebAuthn authentication provider.
+ * Supports both session-based (monolith) and token-based (API/hybrid) authentication modes.
  *
  * Note: This is a simplified implementation. For production use,
  * integrate with a proper WebAuthn library like web-auth/webauthn-lib.
@@ -26,6 +29,8 @@ final class PasskeyProvider
         private readonly SessionService $sessionService,
         private readonly string $rpId,
         private readonly string $rpName,
+        private readonly ?AuthConfig $authConfig = null,
+        private readonly ?TokenManagerInterface $tokenManager = null,
     ) {
     }
 
@@ -135,14 +140,16 @@ final class PasskeyProvider
     }
 
     /**
-     * Verify passkey authentication and create session.
+     * Verify passkey authentication and create session or tokens.
+     *
+     * Returns tokens in API/hybrid mode, session in monolith mode.
      *
      * @param array<string, mixed> $assertion The assertion from the client
      * @param string $challenge The challenge that was sent
      * @param string $ipAddress The user's IP address
      * @param string $userAgent The user's user agent
      *
-     * @return array{user: User, session: Session}
+     * @return array{user: User, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string}
      *
      * @throws InvalidCredentialsException
      * @throws \Exception
@@ -182,7 +189,20 @@ final class PasskeyProvider
             throw new InvalidCredentialsException('User not found');
         }
 
-        // Create session
+        // API/Hybrid mode: Return JWT tokens
+        if ($this->authConfig?->supportsTokens() && $this->tokenManager !== null) {
+            $tokens = $this->tokenManager->create($user);
+
+            return [
+                'user' => $user,
+                'access_token' => $tokens['access_token'],
+                'refresh_token' => $tokens['refresh_token'],
+                'token_type' => $tokens['token_type'],
+                'expires_in' => $tokens['expires_in'],
+            ];
+        }
+
+        // Session mode (default): Create session
         $session = $this->sessionService->create($user, $ipAddress, $userAgent);
 
         return [

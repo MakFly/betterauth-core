@@ -7,9 +7,9 @@ namespace BetterAuth\Tests\GuestSession;
 use BetterAuth\Core\Entities\GuestSession;
 use BetterAuth\Core\Entities\User;
 use BetterAuth\Core\Interfaces\GuestSessionRepositoryInterface;
-use BetterAuth\Tests\Fixtures\TestUser;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Providers\GuestSessionProvider\GuestSessionProvider;
+use BetterAuth\Tests\Fixtures\TestUser;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 

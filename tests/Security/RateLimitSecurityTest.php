@@ -39,7 +39,7 @@ class RateLimitSecurityTest extends TestCase
         for ($i = 0; $i < 4; $i++) {
             $this->assertFalse(
                 $this->limiter->tooManyAttempts($key, 5, 60),
-                "Request $i should be allowed"
+                "Request $i should be allowed",
             );
             $this->limiter->hit($key, 60);
         }
@@ -61,7 +61,7 @@ class RateLimitSecurityTest extends TestCase
         // 6th attempt should be blocked
         $this->assertTrue(
             $this->limiter->tooManyAttempts($key, 5, 60),
-            'Should be blocked after 5 attempts'
+            'Should be blocked after 5 attempts',
         );
     }
 
@@ -240,7 +240,7 @@ class RateLimitSecurityTest extends TestCase
         $key2 = "login:{$email}:192.168.1.2";
         $this->assertFalse(
             $this->limiter->tooManyAttempts($key2, 5, 60),
-            'Different IP is not blocked (known limitation)'
+            'Different IP is not blocked (known limitation)',
         );
 
         // To properly handle this, key should be per-email only:

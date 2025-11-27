@@ -11,9 +11,9 @@ use BetterAuth\Core\Exceptions\RateLimitException;
 use BetterAuth\Core\Interfaces\EmailSenderInterface;
 use BetterAuth\Core\Interfaces\MagicLinkStorageInterface;
 use BetterAuth\Core\Interfaces\RateLimiterInterface;
+use BetterAuth\Core\Interfaces\TokenManagerInterface;
 use BetterAuth\Core\Interfaces\UserRepositoryInterface;
 use BetterAuth\Core\SessionService;
-use BetterAuth\Core\TokenAuthManager;
 use BetterAuth\Core\Utils\Crypto;
 use BetterAuth\Core\Utils\IdGenerator;
 use Psr\Log\LoggerInterface;
@@ -21,7 +21,7 @@ use Psr\Log\NullLogger;
 
 /**
  * Magic link (passwordless) authentication provider.
- * Supports both session-based (monolith) and token-based (API) authentication modes.
+ * Supports both session-based (monolith) and token-based (API/hybrid) authentication modes.
  */
 final class MagicLinkProvider
 {
@@ -34,7 +34,7 @@ final class MagicLinkProvider
         private readonly EmailSenderInterface $emailSender,
         private readonly SessionService $sessionService,
         private readonly AuthConfig $authConfig,
-        private readonly ?TokenAuthManager $tokenAuthManager = null,
+        private readonly ?TokenManagerInterface $tokenManager = null,
         private readonly ?RateLimiterInterface $rateLimiter = null,
         ?LoggerInterface $logger = null,
     ) {
@@ -187,18 +187,18 @@ final class MagicLinkProvider
             }
 
             // Create authentication tokens/session based on mode
-            if ($this->authConfig->isApi() && $this->tokenAuthManager !== null) {
-                // API mode: Create JWT tokens (stateless)
-                $this->logger->debug('Magic link: Creating JWT tokens (API mode)', [
+            if ($this->authConfig->supportsTokens() && $this->tokenManager !== null) {
+                // API/Hybrid mode: Create JWT tokens (stateless)
+                $this->logger->debug('Magic link: Creating JWT tokens (API/Hybrid mode)', [
                     'user_id' => $user->getId(),
                 ]);
 
-                $tokens = $this->tokenAuthManager->createTokensForUser($user);
+                $tokens = $this->tokenManager->create($user);
 
                 // Mark token as used AFTER successful token creation
                 $this->magicLinkStorage->markAsUsed($token);
 
-                $this->logger->info('Magic link verification successful (API mode)', [
+                $this->logger->info('Magic link verification successful (API/Hybrid mode)', [
                     'user_id' => $user->getId(),
                     'email' => $email,
                     'ip_address' => $ipAddress,
@@ -210,7 +210,7 @@ final class MagicLinkProvider
                     'refresh_token' => $tokens['refresh_token'],
                     'expires_in' => $tokens['expires_in'],
                     'token_type' => $tokens['token_type'],
-                    'user' => $user,  // Return full User object like TokenAuthManager does
+                    'user' => $user,
                 ];
             } else {
                 // Session mode: Create database session (stateful)
@@ -234,7 +234,7 @@ final class MagicLinkProvider
                     'access_token' => $session->getToken(),
                     'refresh_token' => $session->getToken(), // Using session token as both
                     'expires_in' => 604800, // 7 days default
-                    'user' => $user,  // Return full User object like SessionAuthManager does
+                    'user' => $user,
                 ];
             }
         } catch (\Exception $e) {

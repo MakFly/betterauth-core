@@ -8,6 +8,7 @@ use BetterAuth\Core\Config\AuthConfig;
 use BetterAuth\Core\Config\AuthMode;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
+use BetterAuth\Core\Interfaces\AuthManagerInterface;
 
 /**
  * Unified Authentication Manager - Facade pattern.
@@ -20,6 +21,11 @@ use BetterAuth\Core\Entities\User;
  * - Use TokenAuthManager directly for explicit token-based auth
  * - Use AuthManager for automatic mode detection and delegation
  *
+ * Supports three modes:
+ * - MONOLITH: Session-based auth with cookies
+ * - API: Token-based stateless auth (Paseto V4)
+ * - HYBRID: Both session and token auth (web + mobile/SPA)
+ *
  * This class is final as it's a facade that should not be extended.
  * Extend the underlying managers if you need custom behavior.
  *
@@ -30,7 +36,7 @@ use BetterAuth\Core\Entities\User;
  * $result = $auth->signIn($email, $password, $ip, $userAgent);
  * ```
  */
-final class AuthManager
+final class AuthManager implements AuthManagerInterface
 {
     private readonly AuthMode $mode;
 
@@ -48,18 +54,32 @@ final class AuthManager
         if ($this->mode->isApi() && $this->tokenAuthManager === null) {
             throw new \InvalidArgumentException('TokenAuthManager is required for API mode');
         }
+
+        // Hybrid mode requires both managers
+        if ($this->mode->isHybrid()) {
+            if ($this->sessionAuthManager === null) {
+                throw new \InvalidArgumentException('SessionAuthManager is required for hybrid mode');
+            }
+            if ($this->tokenAuthManager === null) {
+                throw new \InvalidArgumentException('TokenAuthManager is required for hybrid mode');
+            }
+        }
     }
 
     /**
      * Sign in a user - delegates to appropriate manager based on mode.
      *
-     * @return array Session mode returns {user, session}, API mode returns {user, access_token, refresh_token}
+     * @return array Session mode returns {user, session}, API/Hybrid mode returns {user, access_token, refresh_token}
      */
     public function signIn(string $email, string $password, string $ipAddress, string $userAgent): array
     {
-        return $this->mode->isMonolith()
-            ? $this->sessionAuthManager->signIn($email, $password, $ipAddress, $userAgent)
-            : $this->tokenAuthManager->signIn($email, $password);
+        // API and Hybrid modes use token-based auth
+        if ($this->mode->supportsTokens()) {
+            return $this->tokenAuthManager->signIn($email, $password);
+        }
+
+        // Monolith mode uses session-based auth
+        return $this->sessionAuthManager->signIn($email, $password, $ipAddress, $userAgent);
     }
 
     /**
@@ -88,9 +108,14 @@ final class AuthManager
      */
     public function signOut(string $token): bool
     {
-        return $this->mode->isMonolith()
-            ? $this->sessionAuthManager->signOut($token)
-            : false; // Token-based auth is stateless, no server-side logout needed
+        // Session-based modes can sign out
+        if ($this->mode->supportsSessions() && $this->sessionAuthManager !== null) {
+            return $this->sessionAuthManager->signOut($token);
+        }
+
+        // Token-based auth is stateless, no server-side logout needed
+        // For full logout in API mode, use revokeAllTokens() to invalidate refresh tokens
+        return false;
     }
 
     /**
@@ -98,9 +123,24 @@ final class AuthManager
      */
     public function getCurrentUser(string $token): ?User
     {
-        return $this->mode->isMonolith()
-            ? $this->sessionAuthManager->getCurrentUser($token)
-            : $this->tokenAuthManager->verify($token);
+        // Token-based modes (API, Hybrid) verify the Paseto token
+        if ($this->mode->supportsTokens() && $this->tokenAuthManager !== null) {
+            try {
+                return $this->tokenAuthManager->verify($token);
+            } catch (\Exception) {
+                // If token verification fails in hybrid mode, try session
+                if (!$this->mode->isHybrid()) {
+                    return null;
+                }
+            }
+        }
+
+        // Session-based modes (Monolith, Hybrid) check the session
+        if ($this->mode->supportsSessions() && $this->sessionAuthManager !== null) {
+            return $this->sessionAuthManager->getCurrentUser($token);
+        }
+
+        return null;
     }
 
     /**
@@ -126,62 +166,62 @@ final class AuthManager
     }
 
     /**
-     * Validate session (session mode only).
+     * Validate session (session/hybrid mode).
      */
     public function validateSession(string $sessionToken): Session
     {
-        if (!$this->mode->isMonolith()) {
-            throw new \BadMethodCallException('validateSession is only available in session mode');
+        if (!$this->mode->supportsSessions()) {
+            throw new \BadMethodCallException('validateSession is only available in session/hybrid mode');
         }
 
         return $this->sessionAuthManager->validateSession($sessionToken);
     }
 
     /**
-     * Refresh token (API mode only).
+     * Refresh token (API/hybrid mode).
      */
     public function refresh(string $refreshToken): array
     {
-        if (!$this->mode->isApi()) {
-            throw new \BadMethodCallException('refresh is only available in API mode');
+        if (!$this->mode->supportsTokens()) {
+            throw new \BadMethodCallException('refresh is only available in API/hybrid mode');
         }
 
         return $this->tokenAuthManager->refresh($refreshToken);
     }
 
     /**
-     * Revoke all tokens for a user (API mode only).
+     * Revoke all tokens for a user (API/hybrid mode).
      */
     public function revokeAllTokens(string $userId): int
     {
-        if (!$this->mode->isApi()) {
-            throw new \BadMethodCallException('revokeAllTokens is only available in API mode');
+        if (!$this->mode->supportsTokens()) {
+            throw new \BadMethodCallException('revokeAllTokens is only available in API/hybrid mode');
         }
 
         return $this->tokenAuthManager->revokeAllTokens($userId);
     }
 
     /**
-     * Get all sessions for a user (session mode only).
+     * Get all sessions for a user (session/hybrid mode).
      *
      * @return Session[]
      */
     public function getUserSessions(string $userId): array
     {
-        if (!$this->mode->isMonolith()) {
-            throw new \BadMethodCallException('getUserSessions is only available in session mode');
+        if (!$this->mode->supportsSessions()) {
+            throw new \BadMethodCallException('getUserSessions is only available in session/hybrid mode');
         }
 
         return $this->sessionAuthManager->getUserSessions($userId);
     }
 
     /**
-     * Revoke a specific session for a user (session mode only).
+     * Revoke a specific session for a user (session/hybrid mode).
      */
     public function revokeSession(string $userId, string $sessionId): bool
     {
-        if (!$this->mode->isMonolith()) {
-            throw new \BadMethodCallException('revokeSession is only available in session mode');
+        if (!$this->mode->supportsSessions()) {
+            throw new \BadMethodCallException('revokeSession is only available in session/hybrid mode');
         }
 
         return $this->sessionAuthManager->revokeSession($userId, $sessionId);
@@ -220,7 +260,7 @@ final class AuthManager
     }
 
     /**
-     * Check if in session mode.
+     * Check if in session mode (monolith).
      */
     public function isSessionMode(): bool
     {
@@ -233,6 +273,30 @@ final class AuthManager
     public function isApiMode(): bool
     {
         return $this->mode->isApi();
+    }
+
+    /**
+     * Check if in hybrid mode.
+     */
+    public function isHybridMode(): bool
+    {
+        return $this->mode->isHybrid();
+    }
+
+    /**
+     * Check if this mode supports token-based authentication.
+     */
+    public function supportsTokens(): bool
+    {
+        return $this->mode->supportsTokens();
+    }
+
+    /**
+     * Check if this mode supports session-based authentication.
+     */
+    public function supportsSessions(): bool
+    {
+        return $this->mode->supportsSessions();
     }
 
     /**

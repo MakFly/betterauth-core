@@ -183,7 +183,7 @@ class PasswordSecurityTest extends TestCase
         $strongerHasher = new PasswordHasher(
             memoryCost: 131072, // 128MB
             timeCost: 6,
-            threads: 4
+            threads: 4,
         );
 
         // Hash with default parameters
@@ -254,7 +254,7 @@ class PasswordSecurityTest extends TestCase
             $hash = $this->hasher->hash($password);
             $this->assertTrue(
                 $this->hasher->verify($password, $hash),
-                "Failed for password: " . substr($password, 0, 30) . '...'
+                'Failed for password: ' . substr($password, 0, 30) . '...',
             );
         }
     }
@@ -269,7 +269,7 @@ class PasswordSecurityTest extends TestCase
         $hash = $this->hasher->hash($password);
 
         $this->assertTrue($this->hasher->verify($password, $hash));
-        $this->assertFalse($this->hasher->verify("pass", $hash));
-        $this->assertFalse($this->hasher->verify("password", $hash));
+        $this->assertFalse($this->hasher->verify('pass', $hash));
+        $this->assertFalse($this->hasher->verify('password', $hash));
     }
 }

@@ -15,7 +15,7 @@ class TokenExpiredException extends AuthException
         string $message = 'Token has expired',
         ?\DateTimeImmutable $expiredAt = null,
         int $code = 0,
-        ?\Throwable $previous = null
+        ?\Throwable $previous = null,
     ) {
         parent::__construct($message, $code, $previous);
         $this->expiredAt = $expiredAt;
