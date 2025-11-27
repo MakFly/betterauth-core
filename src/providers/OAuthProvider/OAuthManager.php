@@ -67,7 +67,7 @@ final class OAuthManager
      *
      * Returns tokens in API/hybrid mode, session in monolith mode.
      *
-     * @return array{user: User, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string, isNewUser: bool}
+     * @return array{user: array<string, mixed>, session?: Session, access_token?: string, refresh_token?: string, expires_in?: int, token_type?: string, isNewUser: bool}
      *
      * @throws \Exception
      */
