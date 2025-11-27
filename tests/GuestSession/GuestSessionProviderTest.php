@@ -90,7 +90,7 @@ class GuestSessionProviderTest extends TestCase
         $userData = [
             'email' => 'newuser@example.com',
             'name' => 'New User',
-            'password_hash' => 'hashed_password',
+            'password' => 'hashed_password',
         ];
 
         $guestSession = new GuestSession(
@@ -115,7 +115,7 @@ class GuestSessionProviderTest extends TestCase
             'id' => 'user-new-123',
             'email' => 'newuser@example.com',
             'name' => 'New User',
-            'password_hash' => 'hashed_password',
+            'password' => 'hashed_password',
         ]);
 
         $this->userRepo->expects($this->once())

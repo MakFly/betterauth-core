@@ -27,7 +27,7 @@ class AccountLinkProviderTest extends TestCase
         $user = TestUser::fromArray([
             'id' => 'user-123',
             'email' => 'user@example.com',
-            'password_hash' => null,
+            'password' => null,
             'name' => 'Test User',
             'avatar' => null,
             'email_verified' => true,
@@ -84,7 +84,7 @@ class AccountLinkProviderTest extends TestCase
         $user = TestUser::fromArray([
             'id' => 'user-123',
             'email' => 'user@example.com',
-            'password_hash' => null,
+            'password' => null,
             'name' => 'Test User',
             'avatar' => null,
             'email_verified' => true,

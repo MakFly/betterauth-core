@@ -66,7 +66,7 @@ final class SessionAuthManager
 
             $userData = [
                 'email' => $email,
-                'password_hash' => $passwordHash,
+                'password' => $passwordHash,
                 'name' => $additionalData['name'] ?? null,
                 'avatar' => $additionalData['avatar'] ?? null,
                 'email_verified' => false,
