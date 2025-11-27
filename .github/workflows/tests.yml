@@ -144,7 +144,7 @@ jobs:
       - name: Install Behat
         run: |
           if ! composer show behat/behat > /dev/null 2>&1; then
-            composer require --dev behat/behat:^3.14 --no-interaction
+            composer require --dev behat/behat:^3.14 --with-all-dependencies --no-interaction
           fi
 
       - name: Run Behat scenarios

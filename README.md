@@ -59,28 +59,25 @@ $userRepo = new PdoUserRepository($pdo);
 // Configure authentication
 $config = new AuthConfig(
     secret: 'your-256-bit-secret-key',
-    tokenLifetime: 7200, // 2 hours
+    tokenLifetime: 3600, // 1 hour
     refreshLifetime: 2592000 // 30 days
 );
 
 // Create auth manager
 $auth = new TokenAuthManager($config, $userRepo);
 
-// Register a user
-$user = $auth->register(
-    email: 'user@example.com',
-    password: 'SecurePassword123',
-    name: 'John Doe'
-);
-
-// Login
-$tokens = $auth->login(
+// Sign in (user must be created via SessionAuthManager or directly via repository)
+$result = $auth->signIn(
     email: 'user@example.com',
     password: 'SecurePassword123'
 );
 
-// Access user with token
-$currentUser = $auth->getUserFromToken($tokens['accessToken']);
+// Access tokens
+$accessToken = $result['access_token'];
+$refreshToken = $result['refresh_token'];
+
+// Verify token and get user
+$payload = $auth->verify($accessToken);
 ```
 
 ## 💾 Storage Adapters
@@ -105,19 +102,32 @@ Use the [`betterauth/symfony-bundle`](https://github.com/MakFly/betterauth-symfo
 ### Email/Password
 
 ```php
-$auth->register(
+use BetterAuth\Core\SessionAuthManager;
+
+// For registration, use SessionAuthManager
+$sessionAuth = new SessionAuthManager($config, $userRepo, $sessionRepo);
+
+$result = $sessionAuth->signUp(
     email: 'user@example.com',
     password: 'SecurePassword123',
-    name: 'John Doe'
+    name: 'John Doe',
+    ipAddress: $_SERVER['REMOTE_ADDR'],
+    userAgent: $_SERVER['HTTP_USER_AGENT']
 );
 
-$tokens = $auth->login(
+// For API authentication, use TokenAuthManager
+$tokenAuth = new TokenAuthManager($config, $userRepo, $refreshTokenRepo);
+
+$result = $tokenAuth->signIn(
     email: 'user@example.com',
     password: 'SecurePassword123'
 );
+// Returns: ['user' => User, 'access_token' => '...', 'refresh_token' => '...', 'expires_in' => 3600]
 ```
 
 ### OAuth 2.0
+
+> **Note:** Only Google OAuth is fully tested and production-ready (`[STABLE]`). Other providers (GitHub, Facebook, Microsoft, Discord) are in `[DRAFT]` status.
 
 ```php
 use BetterAuth\Providers\OAuthProvider\OAuthManager;
@@ -136,61 +146,70 @@ $oauth = new OAuthManager($oauthConfig, $userRepo);
 $authUrl = $oauth->getAuthorizationUrl('google');
 header("Location: $authUrl");
 
-// Handle callback
-$userData = $oauth->handleCallback('google', $_GET['code']);
-$user = $auth->createOrUpdateOAuthUser($userData);
+// Handle callback - creates or updates user automatically
+$result = $oauth->handleCallback('google', $_GET['code']);
+// Returns: ['user' => User, 'isNewUser' => bool, 'providerUser' => ProviderUser]
 ```
 
 ### Magic Link
 
 ```php
-use BetterAuth\Providers\MagicLinkProvider\MagicLinkManager;
+use BetterAuth\Providers\MagicLinkProvider\MagicLinkProvider;
 
-$magicLink = new MagicLinkManager($config, $userRepo);
+$magicLink = new MagicLinkProvider($config, $userRepo, $magicLinkStorage, $emailSender);
 
-// Send magic link
-$token = $magicLink->createMagicLink('user@example.com');
-// Send $token via email
+// Create magic link token
+$token = $magicLink->createToken('user@example.com');
+// Token is automatically sent via configured EmailSender
 
-// Verify magic link
-$user = $magicLink->verifyMagicLink($token);
+// Verify magic link and authenticate user
+$result = $magicLink->verify($token);
+// Returns: ['user' => User, 'session' => Session] or tokens depending on mode
 ```
 
 ### TOTP (Two-Factor Authentication)
 
 ```php
-use BetterAuth\Providers\TotpProvider\TotpManager;
+use BetterAuth\Providers\TotpProvider\TotpProvider;
 
-$totp = new TotpManager($userRepo);
+$totp = new TotpProvider($config, $totpStorage);
 
-// Enable TOTP for user
-$secret = $totp->enableTotp($userId);
-$qrCode = $totp->getQrCode($user, $secret);
+// Generate secret and QR code for user
+$result = $totp->generateSecret($userId, 'user@example.com');
+// Returns: [
+//   'secret' => 'JBSWY3DPEHPK3PXP',
+//   'qrCode' => 'data:image/png;base64,...',
+//   'qrCodeUrl' => 'otpauth://totp/...'
+// ]
 
-// Verify TOTP code
-$isValid = $totp->verifyTotp($userId, '123456');
+// Enable TOTP after user confirms with first code
+$totp->enable($userId, $result['secret'], '123456');
+
+// Verify TOTP code during login
+$isValid = $totp->verify($userId, '123456');
 ```
 
 ### Passkeys (WebAuthn)
 
 ```php
-use BetterAuth\Providers\PasskeyProvider\PasskeyManager;
+use BetterAuth\Providers\PasskeyProvider\PasskeyProvider;
 
-$passkey = new PasskeyManager($config, $userRepo);
+$passkey = new PasskeyProvider($config, $passkeyStorage);
 
-// Register passkey
-$options = $passkey->generateRegistrationOptions($userId);
-// Send $options to client
+// Register passkey - Step 1: Generate options
+$options = $passkey->generateRegistrationOptions($userId, 'user@example.com');
+// Send $options to client (JavaScript WebAuthn API)
 
-// Verify registration
+// Register passkey - Step 2: Verify client response
 $passkey->verifyRegistration($userId, $clientResponse);
 
-// Authenticate with passkey
-$options = $passkey->generateAuthenticationOptions();
+// Authenticate - Step 1: Generate options
+$options = $passkey->generateAuthenticationOptions($userId);
 // Send $options to client
 
-// Verify authentication
-$user = $passkey->verifyAuthentication($clientResponse);
+// Authenticate - Step 2: Verify and get user
+$result = $passkey->verifyAuthentication($clientResponse);
+// Returns: ['user' => User, 'credentialId' => '...']
 ```
 
 ## 🔒 Security Features
@@ -201,13 +220,14 @@ BetterAuth uses **Paseto V4** tokens (encrypted, authenticated):
 
 ```php
 // Access token (short-lived)
-$accessToken = $tokens['accessToken']; // Valid for 2 hours
+$accessToken = $result['access_token']; // Valid for 1 hour (default)
 
 // Refresh token (long-lived)
-$refreshToken = $tokens['refreshToken']; // Valid for 30 days
+$refreshToken = $result['refresh_token']; // Valid for 30 days
 
 // Refresh access token
-$newTokens = $auth->refresh($refreshToken);
+$newResult = $auth->refresh($refreshToken);
+// Returns new access_token and optionally rotated refresh_token
 ```
 
 ### Password Hashing
@@ -215,10 +235,12 @@ $newTokens = $auth->refresh($refreshToken);
 Passwords are hashed using **Argon2id** (memory-hard, resistant to GPU attacks):
 
 ```php
-// Automatic during registration
-$user = $auth->register(
+// Automatic during signUp
+$result = $sessionAuth->signUp(
     email: 'user@example.com',
-    password: 'SecurePassword123' // Hashed with Argon2id
+    password: 'SecurePassword123', // Hashed with Argon2id
+    ipAddress: $_SERVER['REMOTE_ADDR'],
+    userAgent: $_SERVER['HTTP_USER_AGENT']
 );
 ```
 
@@ -243,13 +265,25 @@ use BetterAuth\Core\Config\AuthConfig;
 
 $config = new AuthConfig(
     secret: 'your-256-bit-secret-key',
-    tokenLifetime: 7200,        // Access token: 2 hours
+    tokenLifetime: 3600,        // Access token: 1 hour (default)
     refreshLifetime: 2592000,   // Refresh token: 30 days
     passwordMinLength: 8,
     requireEmailVerification: true,
     enableDeviceTrust: true,
     enableSecurityNotifications: true
 );
+```
+
+### Rate Limiting
+
+BetterAuth includes built-in rate limiting protection (enabled by default):
+
+- **Max attempts:** 5 per IP/email combination
+- **Decay time:** 300 seconds (5 minutes)
+
+```php
+// Rate limiting is automatically enforced on signIn attempts
+// After 5 failed attempts, the user must wait 5 minutes
 ```
 
 ## 👥 Multi-Tenancy
