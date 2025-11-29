@@ -285,7 +285,7 @@ final class TokenAuthManager implements TokenAuthManagerInterface
                     'type' => 'access',
                     'data' => [
                         'email' => $user->getEmail(),
-                        'name' => $user->getName(),
+                        'username' => $user->getUsername(),
                     ],
                 ],
                 $this->config->tokenLifetime,

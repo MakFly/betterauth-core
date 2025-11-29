@@ -54,7 +54,7 @@ final class PasskeyProvider
             'user' => [
                 'id' => $user->getId(),
                 'name' => $user->getEmail(),
-                'displayName' => $user->getName() ?? $user->getEmail(),
+                'displayName' => $user->getUsername() ?? $user->getEmail(),
             ],
             'pubKeyCredParams' => [
                 ['type' => 'public-key', 'alg' => -7],  // ES256

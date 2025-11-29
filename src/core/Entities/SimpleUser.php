@@ -46,8 +46,8 @@ class SimpleUser extends User
         if (isset($data['password']) || isset($data['password_hash'])) {
             $user->setPassword($data['password'] ?? $data['password_hash']);
         }
-        if (isset($data['name'])) {
-            $user->setName($data['name']);
+        if (isset($data['username'])) {
+            $user->setUsername($data['username']);
         }
         if (isset($data['avatar'])) {
             $user->setAvatar($data['avatar']);
@@ -97,7 +97,7 @@ class SimpleUser extends User
             'id' => $this->getId(),
             'email' => $this->getEmail(),
             'password_hash' => $this->getPassword(),
-            'name' => $this->getName(),
+            'username' => $this->getUsername(),
             'avatar' => $this->getAvatar(),
             'roles' => $this->roles,
             'email_verified' => $this->isEmailVerified(),
@@ -119,7 +119,7 @@ class SimpleUser extends User
         $data = [
             'id' => $this->getId(),
             'email' => $this->getEmail(),
-            'name' => $this->getName(),
+            'username' => $this->getUsername(),
             'avatar' => $this->getAvatar(),
             'roles' => $this->getRoles(),
             'emailVerified' => $this->isEmailVerified(),

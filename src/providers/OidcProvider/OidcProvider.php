@@ -158,7 +158,7 @@ final class OidcProvider
         ];
 
         if (in_array('profile', $scopes, true)) {
-            $userinfo['name'] = $user->getName();
+            $userinfo['name'] = $user->getUsername();
             $userinfo['picture'] = $user->getAvatar();
         }
 
@@ -299,7 +299,7 @@ final class OidcProvider
                 'type' => 'access_token',
                 'scope' => $scopes,
                 'email' => $user->getEmail(),
-                'name' => $user->getName(),
+                'username' => $user->getUsername(),
             ],
             $this->accessTokenLifetime,
         );
@@ -314,7 +314,7 @@ final class OidcProvider
                 'exp' => time() + $this->accessTokenLifetime,
                 'email' => $user->getEmail(),
                 'email_verified' => $user->isEmailVerified(),
-                'name' => $user->getName(),
+                'name' => $user->getUsername(),
                 'picture' => $user->getAvatar(),
             ],
             $this->accessTokenLifetime,

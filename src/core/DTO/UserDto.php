@@ -41,7 +41,7 @@ class UserDto
     /** @var string[] */
     public array $roles = ['ROLE_USER'];
 
-    public ?string $name = null;
+    public ?string $username = null;
 
     public ?string $avatar = null;
 
@@ -66,7 +66,7 @@ class UserDto
         $dto->email = $user->getEmail();
         $dto->password = $user->getPassword();
         $dto->roles = $user->getRoles();
-        $dto->name = $user->getName();
+        $dto->username = $user->getUsername();
         $dto->avatar = $user->getAvatar();
         $dto->emailVerified = $user->isEmailVerified();
         $dto->emailVerifiedAt = $user->getEmailVerifiedAt();

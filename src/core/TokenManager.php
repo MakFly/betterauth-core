@@ -80,7 +80,7 @@ final class TokenManager implements TokenManagerInterface
                 'type' => 'access',
                 'data' => [
                     'email' => $user->getEmail(),
-                    'name' => $user->getName(),
+                    'username' => $user->getUsername(),
                 ],
             ],
             $this->config->tokenLifetime,

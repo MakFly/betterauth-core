@@ -53,7 +53,7 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
     protected array $roles = ['ROLE_USER'];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    protected ?string $name = null;
+    protected ?string $username = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
     protected ?string $avatar = null;
@@ -162,14 +162,14 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
         // If you store any temporary, sensitive data on the user, clear it here
     }
 
-    public function getName(): ?string
+    public function getUsername(): ?string
     {
-        return $this->name;
+        return $this->username;
     }
 
-    public function setName(?string $name): static
+    public function setUsername(?string $username): static
     {
-        $this->name = $name;
+        $this->username = $username;
 
         return $this;
     }
@@ -286,7 +286,7 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __get(string $name): mixed
     {
         $allowedProperties = [
-            'id', 'email', 'password', 'roles', 'name', 'avatar',
+            'id', 'email', 'password', 'roles', 'username', 'avatar',
             'emailVerified', 'emailVerifiedAt', 'createdAt', 'updatedAt', 'metadata',
         ];
 
@@ -303,7 +303,7 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __isset(string $name): bool
     {
         $allowedProperties = [
-            'id', 'email', 'password', 'roles', 'name', 'avatar',
+            'id', 'email', 'password', 'roles', 'username', 'avatar',
             'emailVerified', 'emailVerifiedAt', 'createdAt', 'updatedAt', 'metadata',
         ];
 
