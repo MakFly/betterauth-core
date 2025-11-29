@@ -110,7 +110,7 @@ $sessionAuth = new SessionAuthManager($config, $userRepo, $sessionRepo);
 $result = $sessionAuth->signUp(
     email: 'user@example.com',
     password: 'SecurePassword123',
-    name: 'John Doe',
+    username: 'John Doe',
     ipAddress: $_SERVER['REMOTE_ADDR'],
     userAgent: $_SERVER['HTTP_USER_AGENT']
 );
