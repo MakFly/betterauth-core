@@ -50,7 +50,7 @@ class TokenAuthManagerTest extends TestCase
             'id' => 'user-123',
             'email' => 'test@example.com',
             'password_hash' => $hashedPassword,
-            'name' => 'Test User',
+            'username' => 'Test User',
             'email_verified' => true,
             'created_at' => '2024-01-01 00:00:00',
             'updated_at' => '2024-01-01 00:00:00',
@@ -82,7 +82,7 @@ class TokenAuthManagerTest extends TestCase
         $this->assertArrayNotHasKey('password', $result['user'], 'Password must be excluded from login response');
         $this->assertArrayHasKey('id', $result['user']);
         $this->assertArrayHasKey('email', $result['user']);
-        $this->assertArrayHasKey('name', $result['user']);
+        $this->assertArrayHasKey('username', $result['user']);
         $this->assertArrayHasKey('access_token', $result);
         $this->assertArrayHasKey('refresh_token', $result);
     }

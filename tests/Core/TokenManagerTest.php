@@ -52,7 +52,7 @@ class TokenManagerTest extends TestCase
                     return $payload['sub'] === 'user-123'
                         && $payload['type'] === 'access'
                         && $payload['data']['email'] === 'test@example.com'
-                        && $payload['data']['name'] === 'Test User';
+                        && $payload['data']['username'] === 'Test User';
                 }),
                 $this->config->tokenLifetime,
             )
@@ -206,12 +206,12 @@ class TokenManagerTest extends TestCase
         $this->assertSame('sub', $this->tokenManager->getUserIdClaim());
     }
 
-    private function createMockUser(string $id, string $email, ?string $name): User&MockObject
+    private function createMockUser(string $id, string $email, ?string $username): User&MockObject
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn($id);
         $user->method('getEmail')->willReturn($email);
-        $user->method('getName')->willReturn($name);
+        $user->method('getUsername')->willReturn($username);
 
         return $user;
     }

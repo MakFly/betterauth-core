@@ -42,8 +42,8 @@ class TestUser extends User
         if (isset($data['password']) || isset($data['password_hash'])) {
             $user->setPassword($data['password'] ?? $data['password_hash']);
         }
-        if (isset($data['name'])) {
-            $user->setName($data['name']);
+        if (isset($data['username'])) {
+            $user->setUsername($data['username']);
         }
         if (isset($data['avatar'])) {
             $user->setAvatar($data['avatar']);

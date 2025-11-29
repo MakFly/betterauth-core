@@ -16,7 +16,7 @@ class UserDtoTest extends TestCase
             'id' => 'user-123',
             'email' => 'test@example.com',
             'password_hash' => '$2y$10$hashedpassword',
-            'name' => 'Test User',
+            'username' => 'Test User',
             'email_verified' => true,
             'created_at' => '2024-01-01 00:00:00',
             'updated_at' => '2024-01-01 00:00:00',
@@ -28,7 +28,7 @@ class UserDtoTest extends TestCase
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('email', $array);
         $this->assertArrayNotHasKey('password', $array, 'Password should be excluded from toArray() by default');
-        $this->assertArrayHasKey('name', $array);
+        $this->assertArrayHasKey('username', $array);
         $this->assertArrayHasKey('emailVerified', $array);
     }
 

@@ -264,7 +264,7 @@ class TokenSecurityTest extends TestCase
         $payload = [
             'sub' => 'user123',
             'data' => [
-                'name' => "O'Brien <script>alert('xss')</script>",
+                'username' => "O'Brien <script>alert('xss')</script>",
                 'unicode' => '日本語テスト 🔐',
                 'quotes' => '"double" and \'single\'',
             ],
@@ -273,7 +273,7 @@ class TokenSecurityTest extends TestCase
         $token = $this->tokenService->sign($payload, 3600);
         $result = $this->tokenService->verify($token);
 
-        $this->assertEquals("O'Brien <script>alert('xss')</script>", $result['data']['name']);
+        $this->assertEquals("O'Brien <script>alert('xss')</script>", $result['data']['username']);
         $this->assertEquals('日本語テスト 🔐', $result['data']['unicode']);
     }
 

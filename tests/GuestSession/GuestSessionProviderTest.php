@@ -89,7 +89,7 @@ class GuestSessionProviderTest extends TestCase
         $guestToken = 'valid-guest-token';
         $userData = [
             'email' => 'newuser@example.com',
-            'name' => 'New User',
+            'username' => 'New User',
             'password' => 'hashed_password',
         ];
 
@@ -114,7 +114,7 @@ class GuestSessionProviderTest extends TestCase
         $createdUser = TestUser::fromArray([
             'id' => 'user-new-123',
             'email' => 'newuser@example.com',
-            'name' => 'New User',
+            'username' => 'New User',
             'password' => 'hashed_password',
         ]);
 
