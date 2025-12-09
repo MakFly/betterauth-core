@@ -10,7 +10,7 @@ Framework-agnostic authentication library for PHP 8.2+.
 
 ## ✨ Features
 
-- 🔐 **Multiple authentication methods**: Email/Password, Magic Link, OAuth, Passkeys (WebAuthn), TOTP
+- 🔐 **Multiple authentication methods**: Email/Password, Magic Link, OAuth, TOTP
 - 🌍 **OAuth Providers**: Google, GitHub, Facebook, Microsoft, Discord
 - 👥 **Multi-tenant capabilities**: Organizations, Teams, Members, Invitations with RBAC
 - 🔒 **Secure by default**: Paseto V4 tokens, Argon2id hashing
@@ -47,7 +47,10 @@ BetterAuth Core is framework-agnostic with official integrations:
 <?php
 
 use BetterAuth\Core\Config\AuthConfig;
+use BetterAuth\Core\PasswordHasher;
 use BetterAuth\Core\TokenAuthManager;
+use BetterAuth\Core\TokenService;
+use BetterAuth\Storage\Pdo\PdoRefreshTokenRepository;
 use BetterAuth\Storage\Pdo\PdoUserRepository;
 
 // Database setup
@@ -55,16 +58,29 @@ $pdo = new PDO('sqlite:database.db');
 
 // Create repositories
 $userRepo = new PdoUserRepository($pdo);
+$refreshTokenRepo = new PdoRefreshTokenRepository($pdo);
 
-// Configure authentication
-$config = new AuthConfig(
-    secret: 'your-256-bit-secret-key',
-    tokenLifetime: 3600, // 1 hour
-    refreshLifetime: 2592000 // 30 days
+// Configure authentication (API mode with Paseto)
+$config = AuthConfig::forApi(
+    secretKey: 'your-256-bit-secret-key', // 32+ chars
+    overrides: [
+        'tokenLifetime' => 3600,           // Access token: 1h
+        'refreshTokenLifetime' => 2592000, // Refresh token: 30d
+    ]
 );
 
-// Create auth manager
-$auth = new TokenAuthManager($config, $userRepo);
+// Crypto/services
+$tokenSigner = new TokenService($config->secretKey);
+$passwordHasher = new PasswordHasher();
+
+// Create auth manager (stateless API tokens)
+$auth = new TokenAuthManager(
+    userRepository: $userRepo,
+    refreshTokenRepository: $refreshTokenRepo,
+    tokenService: $tokenSigner,
+    passwordHasher: $passwordHasher,
+    config: $config,
+);
 
 // Sign in (user must be created via SessionAuthManager or directly via repository)
 $result = $auth->signIn(
@@ -187,29 +203,6 @@ $totp->enable($userId, $result['secret'], '123456');
 
 // Verify TOTP code during login
 $isValid = $totp->verify($userId, '123456');
-```
-
-### Passkeys (WebAuthn)
-
-```php
-use BetterAuth\Providers\PasskeyProvider\PasskeyProvider;
-
-$passkey = new PasskeyProvider($config, $passkeyStorage);
-
-// Register passkey - Step 1: Generate options
-$options = $passkey->generateRegistrationOptions($userId, 'user@example.com');
-// Send $options to client (JavaScript WebAuthn API)
-
-// Register passkey - Step 2: Verify client response
-$passkey->verifyRegistration($userId, $clientResponse);
-
-// Authenticate - Step 1: Generate options
-$options = $passkey->generateAuthenticationOptions($userId);
-// Send $options to client
-
-// Authenticate - Step 2: Verify and get user
-$result = $passkey->verifyAuthentication($clientResponse);
-// Returns: ['user' => User, 'credentialId' => '...']
 ```
 
 ## 🔒 Security Features
