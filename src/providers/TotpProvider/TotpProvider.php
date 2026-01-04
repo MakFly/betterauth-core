@@ -11,6 +11,11 @@ use Psr\Log\NullLogger;
 /**
  * TOTP (Time-based One-Time Password) provider for two-factor authentication.
  *
+ * Supports dual-algorithm mode for SHA-1 → SHA-256 migration:
+ * - New secrets use SHA-256 (more secure)
+ * - Existing SHA-1 secrets are migrated lazily on next use
+ * - Both algorithms accepted during transition period
+ *
  * Note: This is a simplified implementation. For production use,
  * consider using a library like spomky-labs/otphp.
  */
@@ -18,8 +23,27 @@ final class TotpProvider
 {
     private const PERIOD = 30; // 30 seconds
     private const DIGITS = 6;
-    private const ALGORITHM = 'sha1';
     private const BACKUP_CODES_COUNT = 10;
+
+    /**
+     * Current preferred algorithm for new secrets.
+     */
+    public const ALGORITHM_SHA256 = 'sha256';
+
+    /**
+     * Legacy algorithm for backward compatibility.
+     */
+    public const ALGORITHM_SHA1 = 'sha1';
+
+    /**
+     * Default algorithm for new secrets.
+     */
+    private const DEFAULT_ALGORITHM = self::ALGORITHM_SHA256;
+
+    /**
+     * Supported algorithms for verification (order = preference).
+     */
+    private const SUPPORTED_ALGORITHMS = [self::ALGORITHM_SHA256, self::ALGORITHM_SHA1];
 
     private readonly LoggerInterface $logger;
 
@@ -57,10 +81,11 @@ final class TotpProvider
             // Generate backup codes
             $backupCodes = $this->generateBackupCodes();
 
-            // Store the secret (always use userId for storage)
+            // Store the secret with algorithm version (always use userId for storage)
             $this->totpStorage->store($userId, $secret, [
                 'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
                 'enabled' => false,
+                'algorithm' => self::DEFAULT_ALGORITHM,
             ]);
 
             // Generate QR code URL (otpauth:// URI) - use displayIdentifier (email) or fallback to userId
@@ -335,17 +360,21 @@ final class TotpProvider
         $secret = $this->generateBase32Secret();
         $backupCodes = $this->generateBackupCodes();
 
-        // Store new secret (disabled until validated)
+        // Store new secret with SHA-256 algorithm (disabled until validated)
         $this->totpStorage->store($userId, $secret, [
             'backup_codes' => array_map(fn ($code) => password_hash($code, PASSWORD_DEFAULT), $backupCodes),
             'enabled' => false,
+            'algorithm' => self::DEFAULT_ALGORITHM,
         ]);
 
         // Generate QR code - use displayIdentifier (email) or fallback to userId
         $qrCodeIdentifier = $displayIdentifier ?? $userId;
-        $qrCodeUrl = $this->getQrCodeUrl($qrCodeIdentifier, $secret);
+        $qrCodeUrl = $this->getQrCodeUrl($qrCodeIdentifier, $secret, self::DEFAULT_ALGORITHM);
 
-        $this->logger->info('TOTP reset successfully', ['user_id' => $userId]);
+        $this->logger->info('TOTP reset successfully', [
+            'user_id' => $userId,
+            'algorithm' => self::DEFAULT_ALGORITHM,
+        ]);
 
         return [
             'success' => true,
@@ -353,36 +382,56 @@ final class TotpProvider
             'qrCode' => $qrCodeUrl,
             'manualEntryKey' => $secret,
             'backupCodes' => $backupCodes,
+            'algorithm' => self::DEFAULT_ALGORITHM,
         ];
     }
 
     /**
-     * Verify a TOTP code against a secret.
+     * Verify a TOTP code against a secret using dual-algorithm support.
+     *
+     * Tries SHA-256 first (preferred), then SHA-1 (legacy) for migration.
+     *
+     * @param string $secret The TOTP secret
+     * @param string $code The code to verify
+     * @param string|null $algorithm Force a specific algorithm (null = try both)
+     *
+     * @return array{valid: bool, algorithm: string|null} Verification result with matched algorithm
      */
-    private function verifyCode(string $secret, string $code): bool
+    private function verifyCodeWithAlgorithm(string $secret, string $code, ?string $algorithm = null): array
     {
         $timestamp = time();
+        $algorithmsToTry = $algorithm !== null ? [$algorithm] : self::SUPPORTED_ALGORITHMS;
 
-        // Check current time window and ±1 windows for clock skew
-        for ($i = -1; $i <= 1; $i++) {
-            $testTime = $timestamp + ($i * self::PERIOD);
-            $expectedCode = $this->generateCode($secret, $testTime);
+        foreach ($algorithmsToTry as $algo) {
+            // Check current time window and ±1 windows for clock skew
+            for ($i = -1; $i <= 1; $i++) {
+                $testTime = $timestamp + ($i * self::PERIOD);
+                $expectedCode = $this->generateCodeWithAlgorithm($secret, $testTime, $algo);
 
-            if (hash_equals($expectedCode, $code)) {
-                return true;
+                if (hash_equals($expectedCode, $code)) {
+                    return ['valid' => true, 'algorithm' => $algo];
+                }
             }
         }
 
-        return false;
+        return ['valid' => false, 'algorithm' => null];
     }
 
     /**
-     * Generate a TOTP code for a given timestamp.
+     * Verify a TOTP code against a secret (backward compatible wrapper).
      */
-    private function generateCode(string $secret, int $timestamp): string
+    private function verifyCode(string $secret, string $code): bool
+    {
+        return $this->verifyCodeWithAlgorithm($secret, $code)['valid'];
+    }
+
+    /**
+     * Generate a TOTP code for a given timestamp with specified algorithm.
+     */
+    private function generateCodeWithAlgorithm(string $secret, int $timestamp, string $algorithm): string
     {
         $time = pack('N*', 0) . pack('N*', floor($timestamp / self::PERIOD));
-        $hash = hash_hmac(self::ALGORITHM, $time, $this->base32Decode($secret), true);
+        $hash = hash_hmac($algorithm, $time, $this->base32Decode($secret), true);
 
         $offset = ord($hash[strlen($hash) - 1]) & 0x0F;
         $value = (
@@ -395,6 +444,16 @@ final class TotpProvider
         $code = $value % (10 ** self::DIGITS);
 
         return str_pad((string) $code, self::DIGITS, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate a TOTP code using the default algorithm (backward compatible).
+     *
+     * @phpstan-ignore-next-line This method exists for backward compatibility and future use.
+     */
+    private function generateCode(string $secret, int $timestamp): string
+    {
+        return $this->generateCodeWithAlgorithm($secret, $timestamp, self::DEFAULT_ALGORITHM);
     }
 
     /**
@@ -430,13 +489,14 @@ final class TotpProvider
      * Get the QR code URL for TOTP setup.
      *
      * @param string $identifier The identifier to display (email or user ID)
+     * @param string $algorithm The HMAC algorithm to use (sha256 or sha1)
      */
-    private function getQrCodeUrl(string $identifier, string $secret): string
+    private function getQrCodeUrl(string $identifier, string $secret, string $algorithm = self::DEFAULT_ALGORITHM): string
     {
         $params = http_build_query([
             'secret' => $secret,
             'issuer' => $this->issuer,
-            'algorithm' => strtoupper(self::ALGORITHM),
+            'algorithm' => strtoupper($algorithm),
             'digits' => self::DIGITS,
             'period' => self::PERIOD,
         ]);
@@ -447,6 +507,31 @@ final class TotpProvider
             urlencode($identifier),
             $params,
         );
+    }
+
+    /**
+     * Get the algorithm used for a user's TOTP.
+     *
+     * @return string The algorithm (sha256 or sha1)
+     */
+    public function getUserAlgorithm(string $userId): string
+    {
+        $totpData = $this->totpStorage->findByUserId($userId);
+
+        if ($totpData === null) {
+            return self::DEFAULT_ALGORITHM;
+        }
+
+        // Check stored algorithm, default to sha1 for legacy secrets
+        return $totpData['algorithm'] ?? self::ALGORITHM_SHA1;
+    }
+
+    /**
+     * Check if user needs TOTP algorithm migration.
+     */
+    public function needsAlgorithmMigration(string $userId): bool
+    {
+        return $this->getUserAlgorithm($userId) === self::ALGORITHM_SHA1;
     }
 
     /**

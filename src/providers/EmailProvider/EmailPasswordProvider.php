@@ -7,15 +7,20 @@ namespace BetterAuth\Providers\EmailProvider;
 use BetterAuth\Core\AuthManager;
 use BetterAuth\Core\Entities\Session;
 use BetterAuth\Core\Entities\User;
+use BetterAuth\Core\Security\PasswordStrengthValidator;
 
 /**
  * Email/Password authentication provider.
  */
 final class EmailPasswordProvider
 {
+    private readonly PasswordStrengthValidator $passwordValidator;
+
     public function __construct(
         private readonly AuthManager $authManager,
+        ?PasswordStrengthValidator $passwordValidator = null,
     ) {
+        $this->passwordValidator = $passwordValidator ?? new PasswordStrengthValidator();
     }
 
     /**
@@ -60,14 +65,43 @@ final class EmailPasswordProvider
     }
 
     /**
-     * Validate password strength.
+     * Validate password strength using entropy-based scoring.
      *
-     * @throws \InvalidArgumentException
+     * Requirements:
+     * - Minimum 10 characters
+     * - Score >= 3 (Strong) on 0-4 scale
+     * - Mix of character classes recommended
+     *
+     * @throws \InvalidArgumentException with detailed feedback
      */
     private function validatePassword(string $password): void
     {
-        if (strlen($password) < 8) {
-            throw new \InvalidArgumentException('Password must be at least 8 characters long');
+        $result = $this->passwordValidator->validate($password);
+
+        if (!$result['valid']) {
+            $feedback = implode('. ', $result['feedback']);
+            $strengthLabel = $this->passwordValidator->getStrengthLabel($result['score']);
+
+            throw new \InvalidArgumentException(
+                sprintf('Password too weak (%s). %s', $strengthLabel, $feedback)
+            );
         }
+    }
+
+    /**
+     * Get password strength analysis without throwing.
+     *
+     * @return array{valid: bool, score: int, label: string, feedback: array<string>}
+     */
+    public function analyzePasswordStrength(string $password): array
+    {
+        $result = $this->passwordValidator->validate($password);
+
+        return [
+            'valid' => $result['valid'],
+            'score' => $result['score'],
+            'label' => $this->passwordValidator->getStrengthLabel($result['score']),
+            'feedback' => $result['feedback'],
+        ];
     }
 }
