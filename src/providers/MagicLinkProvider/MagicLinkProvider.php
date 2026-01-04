@@ -37,6 +37,7 @@ final class MagicLinkProvider
         private readonly ?TokenManagerInterface $tokenManager = null,
         private readonly ?RateLimiterInterface $rateLimiter = null,
         ?LoggerInterface $logger = null,
+        private readonly bool $allowUserCreation = false,
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -78,6 +79,15 @@ final class MagicLinkProvider
         $this->rateLimiter?->hit($rateLimitKey, 300);
 
         try {
+            if (!$this->allowUserCreation && $this->userRepository->findByEmail($email) === null) {
+                $this->logger->info('Magic link request ignored for unknown user', [
+                    'email' => $email,
+                    'ip_address' => $ipAddress,
+                ]);
+
+                return ['success' => true, 'expiresIn' => self::TOKEN_EXPIRY];
+            }
+
             // Generate token
             $token = Crypto::randomToken(32);
 
@@ -154,6 +164,16 @@ final class MagicLinkProvider
             $user = $this->userRepository->findByEmail($email);
 
             if ($user === null) {
+                if (!$this->allowUserCreation) {
+                    $this->logger->warning('Magic link verification failed: User not found', [
+                        'email' => $email,
+                        'ip_address' => $ipAddress,
+                    ]);
+                    $this->magicLinkStorage->markAsUsed($token);
+
+                    return ['success' => false, 'error' => 'Account not found'];
+                }
+
                 $this->logger->info('Creating new user via magic link', ['email' => $email]);
 
                 // Auto-create user for magic link

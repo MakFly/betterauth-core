@@ -88,6 +88,26 @@ class PdoRefreshTokenRepository implements RefreshTokenRepositoryInterface
         ]);
     }
 
+    public function consume(string $token, ?string $replacedBy = null): ?RefreshToken
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE {$this->tableName}
+            SET revoked = 1, replaced_by = :replaced_by
+            WHERE token = :token AND revoked = 0 AND expires_at > NOW()
+        ");
+
+        $stmt->execute([
+            'token' => $token,
+            'replaced_by' => $replacedBy,
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            return null;
+        }
+
+        return $this->findByToken($token);
+    }
+
     public function revokeAllForUser(string $userId): int
     {
         $stmt = $this->pdo->prepare("

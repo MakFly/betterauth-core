@@ -261,8 +261,23 @@ final class OidcProvider
             throw new InvalidCredentialsException('Missing refresh token');
         }
 
-        $refreshToken = $this->refreshTokenRepository->findByToken($refreshTokenValue);
-        if ($refreshToken === null || !$refreshToken->isValid()) {
+        $refreshToken = null;
+        $consumed = false;
+
+        if (method_exists($this->refreshTokenRepository, 'consume')) {
+            /** @var callable $consume */
+            $consume = [$this->refreshTokenRepository, 'consume'];
+            $refreshToken = $consume($refreshTokenValue, null);
+            $consumed = $refreshToken !== null;
+        } else {
+            $refreshToken = $this->refreshTokenRepository->findByToken($refreshTokenValue);
+            if ($refreshToken !== null && $refreshToken->isValid()) {
+                $this->refreshTokenRepository->revoke($refreshTokenValue);
+                $consumed = true;
+            }
+        }
+
+        if (!$consumed || $refreshToken === null) {
             throw new InvalidCredentialsException('Invalid or expired refresh token');
         }
 
@@ -277,9 +292,6 @@ final class OidcProvider
         if ($user === null) {
             throw new InvalidCredentialsException('User not found');
         }
-
-        // Revoke old refresh token
-        $this->refreshTokenRepository->revoke($refreshTokenValue);
 
         // Generate new tokens
         return $this->generateTokens($user, ['openid', 'profile', 'email'], $client->id);

@@ -103,13 +103,26 @@ final class TokenAuthManager implements TokenAuthManagerInterface
             'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
         ]);
 
-        $refreshToken = $this->refreshTokenRepository->findByToken($refreshTokenValue);
+        $newRefreshTokenValue = Crypto::randomToken(32);
+        $refreshToken = null;
+        $consumed = false;
 
-        if ($refreshToken === null || !$refreshToken->isValid()) {
+        if (method_exists($this->refreshTokenRepository, 'consume')) {
+            /** @var callable $consume */
+            $consume = [$this->refreshTokenRepository, 'consume'];
+            $refreshToken = $consume($refreshTokenValue, $newRefreshTokenValue);
+            $consumed = $refreshToken !== null;
+        } else {
+            $refreshToken = $this->refreshTokenRepository->findByToken($refreshTokenValue);
+            if ($refreshToken !== null && $refreshToken->isValid()) {
+                $this->refreshTokenRepository->revoke($refreshTokenValue, $newRefreshTokenValue);
+                $consumed = true;
+            }
+        }
+
+        if (!$consumed || $refreshToken === null) {
             $this->logger->warning('Token refresh failed: Invalid or expired refresh token', [
                 'refresh_token' => substr($refreshTokenValue, 0, 10) . '...',
-                'found' => $refreshToken !== null,
-                'valid' => $refreshToken?->isValid() ?? false,
             ]);
 
             throw new InvalidTokenException('Invalid or expired refresh token');
@@ -126,10 +139,6 @@ final class TokenAuthManager implements TokenAuthManagerInterface
         }
 
         try {
-            // Revoke old refresh token
-            $newRefreshTokenValue = Crypto::randomToken(32);
-            $this->refreshTokenRepository->revoke($refreshTokenValue, $newRefreshTokenValue);
-
             // Create new token pair
             $tokens = $this->createTokenPair($user, $newRefreshTokenValue);
 
