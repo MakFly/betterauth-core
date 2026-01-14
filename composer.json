@@ -33,6 +33,7 @@
         "geoip2/geoip2": "^3.0",
         "mobiledetect/mobiledetectlib": "^4.8",
         "paragonie/paseto": "^3.1",
+        "psr/cache": "^3.0",
         "ramsey/uuid": "^4.7",
         "symfony/security-core": "^7.3|^8.0"
     },
